@@ -23,6 +23,7 @@ log = "0.4"
 env_logger = "0.8"
 termion = "1.5"
 rustc-hash = "1.1"
+regex = "1.4"
 
 [profile.release]
 codegen-units = 1

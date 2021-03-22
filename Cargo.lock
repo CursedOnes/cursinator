@@ -116,6 +116,7 @@ dependencies = [
  "is_sorted",
  "libc",
  "log",
+ "regex",
  "rustc-hash",
  "serde",
  "serde_derive",

@@ -1,6 +1,7 @@
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
 use crate::conf::defaults::{default_domain, default_headers};
+use crate::hard_error;
 
 pub mod search;
 pub mod files;
@@ -10,10 +11,12 @@ use serde_derive::*;
 pub struct API {
     domain: String,
     headers: Vec<(String,String)>,
+    offline: bool,
 }
 
 impl API {
     pub fn http_get(&self, url: &str) -> Result<ureq::Response,ureq::Error> {
+        if self.offline {hard_error!("Offline mode")};
         let mut req = ureq::get(url);
         for (h,v) in &self.headers {
             req = req.set(h,v);
@@ -27,10 +30,12 @@ impl API {
         Self {
             domain: default_domain(),
             headers: default_headers(),
+            offline: false,
         }
     }
 
     pub fn addon_info(&self, id: AddonID) -> anyhow::Result<Option<AddonInfo>> {
+        if self.offline {hard_error!("Offline mode")};
         let url = format!("{domain}/api/v2/addon/{id}",id=id.0,domain=self.domain);
         let resp = self.http_get(&url)?;
         match self.http_get(&url) {

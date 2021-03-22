@@ -39,8 +39,10 @@ pub struct Op {
 pub enum OpCmd {
     #[structopt(about = "Initialize local mod repo")]
     Init {
-        #[structopt(short="g",long,about="slug")]
+        #[structopt(short="g",long,help="gv")]
         game_version: String,
+        #[structopt(short="G",long,help="gv")]
+        game_version_regex: String,
     },
     #[structopt(about = "Install addon")]
     Install {
@@ -72,16 +74,12 @@ pub enum OpCmd {
         #[structopt(help="version")]
         file: Option<String>,
     },
-    #[structopt(name = "set-channel", about = "Set release mode channel for addon")]
-    SetChannel {
-        #[structopt(short,long)]
-        alpha: bool,
-        #[structopt(short,long)]
-        beta: bool,
-        #[structopt(short,long)]
-        release: bool,
+    #[structopt(name = "channel", about = "Set/Get release mode channel for addon", help = "Set/Get release mode channel for addon\n\nExample:\ncursinator channel iron-chests    | shows current channel\ncursinator channel iron-chests ba | set channel to ba\n\nChannel is denoted by the letters\n\nChannel examples:\nr = latest release\nb = latest beta-ish (beta/release)\na = latest alpha-ish\nrb = latest release, if no release available, fallback to latest beta-ish\nba = latest beta-ish, fallback to alpha\nrba (default) = latest release, fallback to beta or alpha\nra = release, fallback to alpha\nOrder doesn't matter: abr = arb = bar = rba")]
+    Channel {
         #[structopt(help="addon")]
         addon: String,
+        #[structopt(help="value or show channel")]
+        value: Option<String>,
     },
     #[structopt(about = "List installed addons")]
     List {

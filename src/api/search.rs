@@ -5,6 +5,7 @@ use super::*;
 impl API {
     pub fn search_key(&self, key: &str, page_size: u64, off: u64) -> anyhow::Result<Vec<AddonInfo>> {
         anyhow::ensure!(key.len() != 0, "to-search key cannot be empty");
+        if self.offline {hard_error!("Offline mode")};
         let url = format!(
             "{domain}/api/v2/addon/search?gameId=432&index={off}&pageSize={page_size}&sectionId=6&searchFilter={key}",
             off=off,
