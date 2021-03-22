@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
 use super::*;
@@ -17,7 +17,6 @@ pub struct LocalAddon { //TODO defaults
     pub installed: Option<AddonFile>,
 }
 
-use chrono::Local;
 use rustc_hash::FxHashMap;
 use serde::de::{SeqAccess, Visitor};
 use structopt::*;
@@ -37,20 +36,18 @@ pub enum UpdateOpt {
 }
 
 #[repr(transparent)]
-pub struct LocalAddons {
-    addons: FxHashMap<AddonID,LocalAddon>,
-}
+pub struct LocalAddons(pub FxHashMap<AddonID,LocalAddon>);
 
 impl Deref for LocalAddons {
     type Target = FxHashMap<AddonID,LocalAddon>;
 
     fn deref(&self) -> &Self::Target {
-        &self.addons
+        &self.0
     }
 }
 impl DerefMut for LocalAddons {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.addons
+        &mut self.0
     }
 }
 
@@ -59,7 +56,7 @@ impl Serialize for LocalAddons {
     where
         S: serde::Serializer {
         
-        serializer.collect_seq(self.addons.values())
+        serializer.collect_seq(self.values())
     }
 }
 impl<'de> Deserialize<'de> for LocalAddons {
@@ -80,13 +77,13 @@ impl<'de> Deserialize<'de> for LocalAddons {
             where
                 A: SeqAccess<'de>,
             {
-                let mut addons = FxHashMap::default();
+                let mut addons = HashMap::with_capacity_and_hasher(256,Default::default());
     
                 while let Some(value) = seq.next_element::<LocalAddon>()? {
                     addons.insert(value.id, value);
                 }
     
-                Ok(LocalAddons{addons})
+                Ok(LocalAddons(addons))
             }
         }
 

@@ -9,9 +9,9 @@ pub mod files;
 use serde_derive::*;
 
 pub struct API {
-    domain: String,
-    headers: Vec<(String,String)>,
-    offline: bool,
+    pub domain: String,
+    pub headers: Vec<(String,String)>,
+    pub offline: bool,
 }
 
 impl API {
@@ -37,9 +37,8 @@ impl API {
     pub fn addon_info(&self, id: AddonID) -> anyhow::Result<Option<AddonInfo>> {
         if self.offline {hard_error!("Offline mode")};
         let url = format!("{domain}/api/v2/addon/{id}",id=id.0,domain=self.domain);
-        let resp = self.http_get(&url)?;
         match self.http_get(&url) {
-            Ok(s) => Ok(Some( resp.into_json::<AddonInfo>()? )),
+            Ok(s) => Ok(Some( s.into_json::<AddonInfo>()? )),
             Err(ureq::Error::Status(404,_)) => Ok(None),
             Err(e) => Err(e.into()),
         }

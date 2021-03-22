@@ -1,9 +1,78 @@
 use crate::addon::release_type::ReleaseType;
-use crate::{error,hard_error};
+use crate::{Op, OpCmd, error, hard_error, log_error};
 use crate::util::match_str::match_str;
+use crate::conf::Repo;
+use crate::api::API;
 
 pub mod aset;
 //pub mod gset;
+pub mod init;
+pub mod install;
+pub mod update;
+pub mod channel;
+pub mod list;
+pub mod updates;
+pub mod update_all;
+pub mod remove;
+pub mod auto_remove;
+pub mod purge;
+pub mod purge_removed;
+pub mod disable;
+pub mod enable;
+
+pub fn main(o: Op) {
+    if let OpCmd::Init { game_version, game_version_regex } = o.cmd.clone() {
+        return init::init(&o,game_version,game_version_regex);
+    }
+    
+    let mut repo = match Repo::load(&o.conf) {
+        Ok(Some(r)) => r,
+        Ok(None) => hard_error!("Repo not found. set -c for repo json or initialize with init"),
+        Err(e) => hard_error!("Failed to read repo json: {}",e),
+    };
+
+    let api = API {
+        domain: repo.conf.domain.clone(),
+        headers: repo.conf.headers.clone(),
+        offline: o.offline,
+    };
+
+    let modified =
+    match o.cmd.clone() {
+        OpCmd::Init { .. } => unreachable!(),
+        OpCmd::Install { alpha, beta, release, force, addon, file } =>
+            install::main(&o,&api,&mut repo,release_type_from_flags(alpha,beta,release),force,addon,file),
+        OpCmd::Update { alpha, beta, release, force, addon, file } => 
+            update::main(&o,&api,&mut repo,release_type_from_flags(alpha,beta,release),force,addon,file),
+        OpCmd::Channel { addon, value } => 
+            channel::main(&o,&mut repo,addon,value),
+        OpCmd::List {} => 
+            list::main(&o,&repo),
+        OpCmd::Updates { older, addon } => 
+            updates::main(&o,&api,&repo,older,addon),
+        OpCmd::UpdateAll { alpha, beta, release } => 
+            update_all::main(&o,&api,&mut repo,release_type_from_flags(alpha,beta,release)),
+        OpCmd::Remove { force, addon } => 
+            remove::main(&o,&mut repo,force,addon),
+        OpCmd::AutoRemove { purge } => 
+            auto_remove::main(&o,&mut repo,purge),
+        OpCmd::Purge { force, cleanup_only, addon } => 
+            purge::main(&o,&mut repo,force,cleanup_only,addon),
+        OpCmd::PurgeRemoved {} => 
+            purge_removed::main(&o,&mut repo),
+        OpCmd::Disable { addon } =>
+            disable::main(&o,&mut repo,addon),
+        OpCmd::Enable { addon } => 
+            enable::main(&o,&mut repo,addon),
+        OpCmd::Aset { addon, key, value } => 
+            aset::main(&o,&mut repo,addon,key,value),
+        OpCmd::Rset { key, value } => todo!(),
+    };
+
+    if modified {
+        log_error!(repo.save(&o.conf),|e|"Failed to write repo json: {}",e);
+    }
+}
 
 pub fn release_type_from_flags(a: bool, b: bool, r: bool) -> Option<ReleaseType> {
     if a {

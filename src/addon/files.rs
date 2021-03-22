@@ -1,7 +1,7 @@
 use serde_derive::*;
 
 use super::{FileGameVersion, FileID};
-use super::dependency::{Dependencies, Dependency};
+use super::dependency::Dependencies;
 use super::release_type::ReleaseType;
 
 #[derive(Deserialize,Serialize)]

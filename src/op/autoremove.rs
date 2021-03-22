@@ -1,7 +1,7 @@
 use rustc_hash::FxHashSet;
 
 use crate::addon::AddonID;
-use crate::addon::local::{LocalAddon, LocalAddons};
+use crate::addon::local::LocalAddons;
 
 pub fn autoremovable(addons: &LocalAddons) -> Vec<AddonID> {
     let mut has_depedents = FxHashSet::default();

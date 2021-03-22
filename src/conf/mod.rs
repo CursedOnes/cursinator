@@ -9,6 +9,7 @@ use serde_derive::*;
 use crate::addon::GameVersion;
 use crate::addon::local::LocalAddons;
 use crate::hard_error;
+use crate::util::{part_file_path, remove_if};
 use defaults::*;
 
 #[derive(Deserialize,Serialize)]
@@ -45,9 +46,12 @@ impl Repo {
         }
     }
     pub fn save(&self, conf: impl AsRef<Path>) -> anyhow::Result<()> {
-        let f = file_write(conf)?; //TODO fix, .part
+        let conf_part = part_file_path(conf.as_ref());
+        let f = file_write(&conf_part)?; //TODO fix, .part
         let f = BufWriter::new(f);
         serde_json::to_writer_pretty(f, self)?;
+        remove_if(&conf)?;
+        std::fs::rename(conf_part, conf)?;
         Ok(())
     }
     pub fn save_new(&self, conf: impl AsRef<Path>) -> anyhow::Result<()> {
@@ -69,10 +73,5 @@ fn file_write_new(p: impl AsRef<Path>) -> std::io::Result<File> {
     OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(p)
-}
-fn file_read(p: impl AsRef<Path>) -> std::io::Result<File> {
-    OpenOptions::new()
-        .read(true)
         .open(p)
 }

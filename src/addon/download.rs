@@ -14,8 +14,8 @@ use anyhow::anyhow;
 use chrono::NaiveDateTime;
 use filetime::{FileTime, set_file_times};
 use sha1::{Digest, Sha1};
+use util::remove_if;
 
-use super::*;
 use super::files::AddonFile;
 
 impl AddonFile {
@@ -136,14 +136,6 @@ impl Drop for DownloadFinalize {
         log_error!(std::fs::rename(&self.file_part_path, &self.file_path));
         log_error!(remove_if(&self.url_txt_path));
         log_error!(std::fs::rename(&self.url_txt_part_path, &self.url_txt_path));
-    }
-}
-
-fn remove_if(path: impl AsRef<Path>) -> std::io::Result<bool> {
-    match std::fs::remove_file(path) {
-        Ok(_) => Ok(true),
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(false),
-        Err(e) => Err(e)
     }
 }
 

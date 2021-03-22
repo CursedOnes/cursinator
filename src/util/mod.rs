@@ -1,5 +1,34 @@
+use std::ffi::{OsStr, OsString};
+use std::io::ErrorKind;
+use std::path::{Path, PathBuf};
+
 
 pub mod match_str;
+
+pub fn part_file_path(p: impl AsRef<OsStr>) -> PathBuf {
+    let mut s: OsString = p.as_ref().to_owned();
+    s.push(".part");
+    PathBuf::from(s)
+}
+
+
+pub fn remove_if(path: impl AsRef<Path>) -> std::io::Result<bool> {
+    match std::fs::remove_file(path) {
+        Ok(_) => Ok(true),
+        Err(e) if e.kind() == ErrorKind::NotFound => Ok(false),
+        Err(e) => Err(e)
+    }
+}
+
+#[macro_export]
+macro_rules! hard_assert {
+    ($oof:expr,$($arg:tt)*) => {{
+        if !$oof {
+            $crate::error!($($arg)*);
+            std::process::exit(1);
+        }
+    }}
+}
 
 #[macro_export]
 macro_rules! hard_error {
@@ -15,7 +44,7 @@ macro_rules! log_error {
         match $oof {
             Ok(v) => Some(v),
             Err(e) => {
-                error!("{}",e);
+                $crate::error!("{}",e);
                 None
             },
         }
@@ -25,7 +54,7 @@ macro_rules! log_error {
             Ok(v) => Some(v),
             Err(e) => {
                 let $e = e;
-                error!($($arg)*);
+                $crate::error!($($arg)*);
                 None
             },
         }
@@ -34,9 +63,18 @@ macro_rules! log_error {
         match $oof {
             Ok(v) => Some(v),
             Err(_) => {
-                error!($($arg)*);
+                $crate::error!($($arg)*);
                 None
             },
+        }
+    };
+}
+#[macro_export]
+macro_rules! unwrap_or_error {
+    ($oof:expr, $($arg:tt)* ) => {
+        match $oof {
+            Some(v) => v,
+            None => $crate::hard_error!($($arg)*),
         }
     };
 }

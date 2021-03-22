@@ -1,29 +1,35 @@
 use std::fmt::Display;
 
-use structopt::*;
-
-use crate::addon::local::{LocalAddons, UpdateOpt};
-use crate::util::match_str::{self, find_installed_mod_by_key};
+use crate::addon::local::UpdateOpt;
+use crate::conf::Repo;
+use crate::util::match_str::find_installed_mod_by_key;
 use crate::print::error::unwrap_addon_match;
-use crate::{error,hard_error};
+use crate::{Op, error, hard_error};
 use crate::util::match_str::match_str;
 use super::match_bool;
 
-pub fn aset(addons: &mut LocalAddons, addon: &str, key: Option<&str>, value: Option<&str>) -> bool {
-    let addon_id = unwrap_addon_match(find_installed_mod_by_key(addon,addons)).z;
+pub fn main(
+    _: &Op,
+    repo: &mut Repo,
+    addon: String,
+    key: Option<String>,
+    value: Option<String>
+) -> bool {
+    let addons = &mut repo.addons;
+    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,addons)).z;
     let addon = addons.get_mut(&addon_id).unwrap();
 
     if let Some(key) = key {
-        match match_key(key) {
+        match match_key(&key) {
             WhatASet::UpdateOpt => if let Some(value) = value {
-                addon.update_opt = match_updateopt(value);
+                addon.update_opt = match_updateopt(&value);
                 true
             } else {
                 eprintln!("\tupdate-opt={}",addon.update_opt);
                 false
             },
             WhatASet::ManuallyInstalled => if let Some(value) = value {
-                addon.manually_installed = match_bool(value,"manually-installed");
+                addon.manually_installed = match_bool(&value,"manually-installed");
                 true
             } else {
                 eprintln!("\tmanually-installed={}",addon.manually_installed);
