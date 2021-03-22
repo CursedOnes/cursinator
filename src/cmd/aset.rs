@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use termion::style::{self, Bold};
+
 use crate::addon::local::UpdateOpt;
 use crate::conf::Repo;
 use crate::util::match_str::find_installed_mod_by_key;
@@ -9,7 +11,7 @@ use crate::util::match_str::match_str;
 use super::match_bool;
 
 pub fn main(
-    _: &Op,
+    o: &Op,
     repo: &mut Repo,
     addon: String,
     key: Option<String>,
@@ -22,24 +24,27 @@ pub fn main(
     if let Some(key) = key {
         match match_key(&key) {
             WhatASet::UpdateOpt => if let Some(value) = value {
+                if o.noop {return false;}
                 addon.update_opt = match_updateopt(&value);
                 true
             } else {
-                eprintln!("\tupdate-opt={}",addon.update_opt);
+                eprintln!("  update-opt={}",addon.update_opt);
                 false
             },
             WhatASet::ManuallyInstalled => if let Some(value) = value {
+                if o.noop {return false;}
                 addon.manually_installed = match_bool(&value,"manually-installed");
                 true
             } else {
-                eprintln!("\tmanually-installed={}",addon.manually_installed);
+                eprintln!("  manually-installed={}",addon.manually_installed);
                 false
             },
             WhatASet::VersionBlacklist => if let Some(value) = value {
+                if o.noop {return false;}
                 addon.version_blacklist = Some(value.to_owned()); //TODO set none
                 true
             } else {
-                eprintln!("\tversion-blacklist={}",addon.version_blacklist.as_ref().map(|s| s as &str).unwrap_or(""));
+                eprintln!("  version-blacklist={}",addon.version_blacklist.as_ref().map(|s| s as &str).unwrap_or(""));
                 false
             },
         }
@@ -66,7 +71,7 @@ fn match_key(s: &str) -> WhatASet {
         Err(e) => {
             error!("Ambiguous matches for setting");
             for m in e {
-                error!("\t{}{}{}{}{}",m.prefix(),Fg(Blue),m.marked(),Fg(Reset),m.suffix());
+                m.print_error();
             }
             std::process::exit(1);
         }
@@ -92,7 +97,7 @@ fn match_updateopt(s: &str) -> UpdateOpt {
         Err(e) => {
             error!("Ambiguous matches for UpdateOpt");
             for m in e {
-                error!("\t{}{}{}{}{}",m.prefix(),Fg(Blue),m.marked(),Fg(Reset),m.suffix());
+                m.print_error();
             }
             std::process::exit(1);
         }

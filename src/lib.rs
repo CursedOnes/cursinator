@@ -79,8 +79,16 @@ pub enum OpCmd {
     },
     #[structopt(about = "List available updates or addon versions")]
     Updates{
+        #[structopt(short,long,help="show alphas (except -b/-r and betas/releases available)")]
+        alpha: bool,
+        #[structopt(short,long,help="show only betas and releases if betas are available (if -r and releases available, only releases will be shown)")]
+        beta: bool,
+        #[structopt(short,long,help="show only releases if releases are available")]
+        release: bool,
+        #[structopt(short="s",long="show-all",help="also list addons without updates and don't omit versions")]
+        show_all: bool,
         #[structopt(short="o",long="older",help="show older versions when listing versions of addon")]
-        older: bool, //will show only update OR hide older version on list addon versions
+        older: bool,
         #[structopt(help="addon")]
         addon: Option<String>, //with addon just list available versions, this would fallback to list version of not installed addons (with query)
     },
@@ -129,7 +137,7 @@ pub enum OpCmd {
         addon: String,
     },
     #[structopt(about="Addon setting")]
-    Aset{
+    Aset{ //TODO move update_opt to separae option
         #[structopt(help="addon")]
         addon: String,
         #[structopt(help="Show/Set specific setting, else list settings")]

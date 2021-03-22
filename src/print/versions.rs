@@ -1,7 +1,9 @@
 use std::borrow::Borrow;
 
-use termion::color::*;
+use termion::{color::*, style};
+use termion::style::Bold;
 
+use crate::addon::rtm::ReleaseTypeMode;
 use crate::addon::{AddonSlug, GameVersion};
 use crate::util::match_str::Match;
 
@@ -10,12 +12,11 @@ use super::*;
 pub fn print_versions(
     versions: &[impl AsAddonFile],
     current: Option<&AddonFile>,
-    override_current_release_type: Option<ReleaseType>,
-    fallback_release_type: ReleaseType,
+    release_type: ReleaseTypeMode,
     //current_slug: &AddonSlug,
     game_version: &GameVersion,
     print_older: bool,
-    show_all: bool,
+    max_h: usize,
 ){
     let mut current_idx = 0;
     if let Some(current) = current {
@@ -30,33 +31,47 @@ pub fn print_versions(
         current_idx = versions.len();
     }
 
-    let mut visible: Vec<Option<&AddonFile>> = Vec::with_capacity(versions.len()-current_idx);
-    let mut visible_old: Vec<Option<&AddonFile>> = Vec::with_capacity(current_idx); //TODO no alloc if !print_older
+    let visible_range = if print_older || current.is_none() {
+        0..versions.len()
+    } else {
+        current_idx..versions.len()
+    };
 
-    let target_release_type = override_current_release_type
-        .or(current.map(|c| c.release_type))
-        .unwrap_or(fallback_release_type);
+    let mut visible: Vec<Option<&AddonFile>> = Vec::with_capacity(visible_range.len());
+
+    let target_release_type = release_type.pick_level(
+        versions[visible_range.clone()].iter().map(|f|f.file().release_type)
+    );
 
     push_visible(
         &mut visible,
         target_release_type,
-        show_all,
+        current,
+        true,
         game_version,
-        versions.iter().map(AsAddonFile::file)
+        versions[visible_range.clone()].iter().rev().map(AsAddonFile::file)
     );
-    if print_older {
+    if visible_range.start != 0 {
+        push_none(&mut visible);
+    }
+
+    if visible.len() > max_h {
+        visible.clear();
+
         push_visible(
-            &mut visible_old,
+            &mut visible,
             target_release_type,
-            show_all,
+            current,
+            false,
             game_version,
-            versions.iter().rev().map(AsAddonFile::file)
+            versions[visible_range.clone()].iter().rev().map(AsAddonFile::file)
         );
-    } else if current_idx != 0 {
-        push_none(&mut visible_old);
+        if visible_range.start != 0 {
+            push_none(&mut visible);
+        }
     }
     
-    for f in visible.iter().rev().chain(visible_old.iter()) {
+    for f in visible.iter() {
         if let Some(f) = f {
             let color =
                 if current.is_some() && f.id == current.unwrap().id {
@@ -77,6 +92,7 @@ pub fn print_versions(
 fn push_visible<'a>(
     dest: &mut Vec<Option<&'a AddonFile>>,
     mut initial: ReleaseType,
+    current: Option<&AddonFile>,
     push_all: bool,
     game_version: &GameVersion,
     versions: impl Iterator<Item=&'a AddonFile>,
@@ -85,6 +101,8 @@ fn push_visible<'a>(
         if game_version.matches(f.game_version.iter()) {
             if f.release_type >= initial || push_all {
                 initial = f.release_type;
+                dest.push(Some(f));
+            } else if current.is_some() && current.unwrap().id == f.id {
                 dest.push(Some(f));
             } else {
                 push_none(dest);
@@ -118,6 +136,13 @@ impl AsAddonFile for Match<&AddonFile> {
         self.z
     }
     fn display(&self) -> String {
-        format!("{}{}{}{}{}",self.prefix(),Fg(Blue),self.marked(),Fg(Reset),self.suffix())
+        format!(
+            "\t{}{}{}{}{}{}{}",
+            self.prefix(),
+            Bold,Fg(LightBlue),
+            self.marked(),
+            style::Reset,Fg(Reset),
+            self.suffix(),
+        )
     }
 }

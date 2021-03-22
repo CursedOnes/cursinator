@@ -70,6 +70,30 @@ macro_rules! log_error {
     };
 }
 #[macro_export]
+macro_rules! unwrap_result_error {
+    ($oof:expr) => {
+        match $oof {
+            Ok(v) => v,
+            Err(e) => $crate::hard_error!("{}",e),
+        }
+    };
+    ($oof:expr, |$e: ident| $($arg:tt)* ) => {
+        match $oof {
+            Ok(v) => v,
+            Err(e) => {
+                let $e = e;
+                $crate::hard_error!($($arg)*)
+            },
+        }
+    };
+    ($oof:expr, $($arg:tt)* ) => {
+        match $oof {
+            Ok(v) => v,
+            Err(_) => $crate::hard_error!($($arg)*),
+        }
+    };
+}
+#[macro_export]
 macro_rules! unwrap_or_error {
     ($oof:expr, $($arg:tt)* ) => {
         match $oof {
@@ -81,14 +105,18 @@ macro_rules! unwrap_or_error {
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {{
-        use termion::color::*; 
-        eprintln!("{}Error: {}{}",Fg(Red),Fg(Reset),format!($($arg)*));
+        use termion::color::*;
+        use termion::style::Bold;
+        use termion::style::Reset as SReset;
+        eprintln!("{}{}error: {}{}{}",Fg(LightRed),Bold,SReset,Fg(Reset),format!($($arg)*));
     }}
 }
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {{
-        use termion::color::*; 
-        eprintln!("{}Warn: {}{}",Fg(Yellow),Fg(Reset),format!($($arg)*));
+        use termion::color::*;
+        use termion::style::Bold;
+        use termion::style::Reset as SReset;
+        eprintln!("{}{}warn: {}{}{}",Fg(LightYellow),Bold,SReset,Fg(Reset),format!($($arg)*));
     }}
 }

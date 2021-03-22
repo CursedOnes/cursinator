@@ -1,5 +1,6 @@
 use termion::terminal_size;
 
+use crate::Op;
 use crate::addon::files::AddonFile;
 use crate::addon::release_type::ReleaseType;
 
@@ -10,9 +11,9 @@ pub mod error;
 pub fn color_of_release_type(rt: &ReleaseType) -> &'static str {
     use termion::color::*;
     match rt {
-        ReleaseType::Alpha   => Red.fg_str(),
-        ReleaseType::Beta    => Yellow.fg_str(),
-        ReleaseType::Release => Green.fg_str(),
+        ReleaseType::Alpha   => LightRed.fg_str(),
+        ReleaseType::Beta    => LightYellow.fg_str(),
+        ReleaseType::Release => LightGreen.fg_str(),
     }
 }
 pub fn release_type_prefix(rt: &ReleaseType) -> &'static str {
@@ -45,4 +46,14 @@ pub fn term_h() -> u16 {
 
 pub fn show_all_thresh(n: usize) -> bool {
     n+4 <= (term_h() as usize)
+}
+
+impl Op {
+    pub fn suffix(&self) -> String {
+        use termion::color::*;
+        match self.noop {
+            true => format!(" {}(noop){}",Fg(Rgb(127,127,127)),Fg(Reset)),
+            false => "".to_owned()
+        }
+    }
 }

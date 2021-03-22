@@ -1,3 +1,5 @@
+use termion::style;
+
 use crate::addon::AddonID;
 use crate::error;
 use crate::hard_error;
@@ -10,7 +12,7 @@ pub fn unwrap_addon_match(r: Result<Match<AddonID>,Vec<Match<AddonID>>>) -> Matc
         Err(e) => {
             error!("Ambiguous matches for installed addon");
             for m in e {
-                error!("\t{}{}{}{}{}",m.prefix(),Fg(Blue),m.marked(),Fg(Reset),m.suffix());
+                m.print_error();
             }
             std::process::exit(1);
         }

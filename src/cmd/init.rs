@@ -26,5 +26,7 @@ pub fn init(
         addons: LocalAddons(Default::default()),
     };
 
-    log_error!(repo.save_new(&o.conf),|e|"Failed to write repo json: {}",e);
+    if !o.noop {
+        log_error!(repo.save_new(&o.conf),|e|"Failed to write repo json: {}",e);
+    }
 }

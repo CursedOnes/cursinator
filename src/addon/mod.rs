@@ -5,6 +5,8 @@ pub mod local;
 pub mod download;
 pub mod rtm;
 
+use std::fmt::Display;
+
 use serde::{Deserialize,Serialize};
 use serde_derive::*;
 
@@ -67,5 +69,11 @@ impl GameVersion {
 impl PartialEq for AddonSlug {
     fn eq(&self, other: &Self) -> bool {
         self.0.trim() == other.0.trim()
+    }
+}
+
+impl Display for AddonSlug {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0,f)
     }
 }

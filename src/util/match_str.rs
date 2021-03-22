@@ -1,5 +1,7 @@
 use std::ops::Range;
 
+use termion::style;
+
 use crate::addon::{AddonID, FileID, GameVersion};
 use crate::addon::files::AddonFile;
 use crate::addon::local::{LocalAddon, LocalAddons};
@@ -9,8 +11,12 @@ use super::*;
 
 pub fn find_installed_mod_by_key(s: &str, v: &LocalAddons) -> Result<Match<AddonID>,Vec<Match<AddonID>>> {
     let make_iter = || {
-        let iter_slug = v.values() .map(|v| (v.id,&v.slug.0 as &str) );
-        let iter_name = v.values() .map(|v| (v.id,&v.name as &str) );
+        let iter_slug = v.values()
+            .filter(|v| v.installed.is_some() )
+            .map(|v| (v.id,&v.slug.0 as &str) );
+        let iter_name = v.values()
+            .filter(|v| v.installed.is_some() )
+            .map(|v| (v.id,&v.name as &str) );
         let iter_filename = v.values() 
             .filter_map(|v| v.installed.as_ref().map(|w| (v.id,w) ) )
             .map(|(z,v)| {
@@ -101,5 +107,15 @@ impl<Z> Match<Z> {
     }
     pub fn suffix(&self) -> &str {
         &self.string[self.range.end..]
+    }
+    pub fn print_error(&self) {
+        crate::error!(
+            "\t{}{}{}{}{}{}{}",
+            self.prefix(),
+            Bold,Fg(LightBlue),
+            self.marked(),
+            style::Reset,Fg(Reset),
+            self.suffix(),
+        );
     }
 }

@@ -1,11 +1,14 @@
+use termion::{color, style};
+
 use crate::addon::release_type::ReleaseType;
+use crate::addon::rtm::ReleaseTypeMode;
 use crate::{Op, OpCmd, error, hard_error, log_error};
 use crate::util::match_str::match_str;
 use crate::conf::Repo;
 use crate::api::API;
 
 pub mod aset;
-//pub mod gset;
+pub mod rset;
 pub mod init;
 pub mod install;
 pub mod update;
@@ -41,17 +44,17 @@ pub fn main(o: Op) {
     match o.cmd.clone() {
         OpCmd::Init { .. } => unreachable!(),
         OpCmd::Install { alpha, beta, release, force, addon, file } =>
-            install::main(&o,&api,&mut repo,release_type_from_flags(alpha,beta,release),force,addon,file),
+            install::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,addon,file),
         OpCmd::Update { alpha, beta, release, force, addon, file } => 
-            update::main(&o,&api,&mut repo,release_type_from_flags(alpha,beta,release),force,addon,file),
+            update::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,addon,file),
         OpCmd::Channel { addon, value } => 
             channel::main(&o,&mut repo,addon,value),
         OpCmd::List {} => 
             list::main(&o,&repo),
-        OpCmd::Updates { older, addon } => 
-            updates::main(&o,&api,&repo,older,addon),
+        OpCmd::Updates { alpha, beta, release, show_all,older, addon } => 
+            updates::main(&o,&api,&repo,ReleaseTypeMode::new2(release,beta,alpha),show_all,older,addon),
         OpCmd::UpdateAll { alpha, beta, release } => 
-            update_all::main(&o,&api,&mut repo,release_type_from_flags(alpha,beta,release)),
+            update_all::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha)),
         OpCmd::Remove { force, addon } => 
             remove::main(&o,&mut repo,force,addon),
         OpCmd::AutoRemove { purge } => 
@@ -66,10 +69,12 @@ pub fn main(o: Op) {
             enable::main(&o,&mut repo,addon),
         OpCmd::Aset { addon, key, value } => 
             aset::main(&o,&mut repo,addon,key,value),
-        OpCmd::Rset { key, value } => todo!(),
+        OpCmd::Rset { key, value } => 
+            rset::main(&o,&mut repo,key,value),
     };
 
     if modified {
+        eprintln!("{}Write repo json{}",color::Fg(color::Rgb(127,127,127)),color::Fg(color::Reset));
         log_error!(repo.save(&o.conf),|e|"Failed to write repo json: {}",e);
     }
 }
@@ -101,7 +106,7 @@ fn match_bool(s: &str, caption: &str) -> bool {
         Err(e) => {
             error!("Ambiguous matches for {}",caption);
             for m in e {
-                error!("\t{}{}{}{}{}",m.prefix(),Fg(Blue),m.marked(),Fg(Reset),m.suffix());
+                m.print_error();
             }
             std::process::exit(1);
         }

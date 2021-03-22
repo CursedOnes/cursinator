@@ -33,7 +33,7 @@ pub fn print_addons_search(
                 None,
                 None,
                 term_w() as usize,
-                Red.fg_str()
+                LightRed.fg_str()
             );
         }
     }
@@ -66,7 +66,7 @@ pub fn print_addon(
     max_width: usize,
     color: &str,
 ) {
-    let prefix = format!("{}: {}",slug.0,name);
+    let prefix = format!("{}: {}",slug,name);
 
     let mut suffix1 = "".to_owned();
     if let Some(rt) = avail_rt {

@@ -15,7 +15,7 @@ pub fn autoremovable(addons: &LocalAddons) -> Vec<AddonID> {
 
     let mut dest = Vec::with_capacity(addons.len()-has_depedents.len());
     for addon in addons.values() {
-        if !addon.manually_installed && has_depedents.contains(&addon.id) {
+        if addon.installed.is_some() && !addon.manually_installed && !has_depedents.contains(&addon.id) {
             dest.push(addon.id);
         }
     }
