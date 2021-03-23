@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::fmt::Display;
+use std::ops::BitOr;
 use serde_derive::*;
 
 use super::release_type::ReleaseType;
@@ -18,7 +19,7 @@ impl ReleaseTypeMode {
         }
         Self{release,beta,alpha}
     }
-    pub fn new2(mut release: bool, mut beta: bool, mut alpha: bool) -> Option<Self> {
+    pub fn new2(release: bool, beta: bool, alpha: bool) -> Option<Self> {
         if !(release|beta|alpha) {
             return None;
         }
@@ -76,5 +77,17 @@ impl Display for ReleaseTypeMode {
             if self.beta    {"b"} else {""},
             if self.alpha   {"a"} else {""},
         )
+    }
+}
+
+impl BitOr for ReleaseTypeMode {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self {
+            release: self.release | rhs.release,
+            beta:    self.beta    | rhs.beta,
+            alpha:   self.alpha   | rhs.alpha,
+        }
     }
 }

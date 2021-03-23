@@ -3,3 +3,4 @@ pub mod deps;
 pub mod autoremove;
 pub mod channel;
 pub mod remove;
+pub mod install;

@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use serde_derive::*;
 
 use super::{FileGameVersion, FileID};
@@ -38,5 +40,11 @@ fn assert_memsize(a: AddonFile) -> [u8;176] {
 fn assert_omemsize(a: Option<AddonFile>) -> [u8;176] {
     unsafe{
         std::mem::transmute(a)
+    }
+}
+
+impl Borrow<ReleaseType> for AddonFile {
+    fn borrow(&self) -> &ReleaseType {
+        &self.release_type
     }
 }

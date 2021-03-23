@@ -28,7 +28,7 @@ pub fn main(
                 addon.update_opt = match_updateopt(&value);
                 true
             } else {
-                eprintln!("  update-opt={}",addon.update_opt);
+                eprintln!("\tupdate-opt={}",addon.update_opt);
                 false
             },
             WhatASet::ManuallyInstalled => if let Some(value) = value {
@@ -36,7 +36,7 @@ pub fn main(
                 addon.manually_installed = match_bool(&value,"manually-installed");
                 true
             } else {
-                eprintln!("  manually-installed={}",addon.manually_installed);
+                eprintln!("\tmanually-installed={}",addon.manually_installed);
                 false
             },
             WhatASet::VersionBlacklist => if let Some(value) = value {
@@ -44,7 +44,7 @@ pub fn main(
                 addon.version_blacklist = Some(value.to_owned()); //TODO set none
                 true
             } else {
-                eprintln!("  version-blacklist={}",addon.version_blacklist.as_ref().map(|s| s as &str).unwrap_or(""));
+                eprintln!("\tversion-blacklist={}",addon.version_blacklist.as_ref().map(|s| s as &str).unwrap_or(""));
                 false
             },
         }

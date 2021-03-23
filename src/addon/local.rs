@@ -21,7 +21,7 @@ use rustc_hash::FxHashMap;
 use serde::de::{SeqAccess, Visitor};
 use structopt::*;
 
-#[derive(StructOpt,Clone)]
+#[derive(StructOpt,Clone,Copy)]
 #[derive(Deserialize,Serialize)]
 pub enum UpdateOpt {
     /// update on implicit and update-all
