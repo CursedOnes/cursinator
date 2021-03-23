@@ -1,7 +1,6 @@
 use crate::op::update::find_version_update;
 use crate::print::addons::print_addon;
 use crate::{Op, error, hard_error};
-use crate::addon::release_type::ReleaseType;
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::api::files::FilesResult;
@@ -9,11 +8,10 @@ use crate::conf::Repo;
 use crate::print::error::unwrap_match;
 use crate::print::versions::print_versions;
 use crate::util::match_str::find_installed_mod_by_key;
-use crate::unwrap_result_error;
 use crate::print::{Koller, term_h};
 
 pub fn main(
-    o: &Op,
+    _: &Op,
     api: &API,
     repo: &Repo,
     rt: Option<ReleaseTypeMode>,

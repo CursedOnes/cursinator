@@ -1,6 +1,5 @@
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::addon::{AddonID, GameVersion};
-use crate::addon::files::AddonFile;
 use crate::addon::local::{LocalAddon, LocalAddons, UpdateOpt};
 use crate::api::API;
 use crate::hard_error;

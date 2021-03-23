@@ -1,4 +1,3 @@
-use std::str;
 use defaults::*;
 
 use crate::{Op, hard_assert, log_error, unwrap_or_error};

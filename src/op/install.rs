@@ -1,6 +1,6 @@
-use crate::addon::{AddonID, AddonSlug, GameVersion};
+use crate::addon::{AddonID, AddonSlug};
 use crate::addon::files::AddonFile;
-use crate::addon::local::{LocalAddon, LocalAddons, UpdateOpt};
+use crate::addon::local::{LocalAddon, UpdateOpt};
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::conf::Repo;

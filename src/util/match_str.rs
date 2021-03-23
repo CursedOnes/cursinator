@@ -2,10 +2,10 @@ use std::ops::Range;
 
 use termion::style;
 
-use crate::addon::{AddonID, FileID, GameVersion};
+use crate::addon::{AddonID, GameVersion};
 use crate::addon::files::AddonFile;
-use crate::addon::local::{LocalAddon, LocalAddons};
-use crate::addon::release_type::ReleaseType;
+use crate::addon::local::LocalAddons;
+use crate::print::Koller;
 
 use super::*;
 
@@ -109,12 +109,13 @@ impl<Z> Match<Z> {
         &self.string[self.range.end..]
     }
     pub fn print_error(&self) {
+        let c = Koller::blue_bold();
         crate::error!(
             "\t{}{}{}{}{}{}{}",
             self.prefix(),
-            Bold,Fg(LightBlue),
+            c.a,c.b,
             self.marked(),
-            style::Reset,Fg(Reset),
+            c.c,c.d,
             self.suffix(),
         );
     }

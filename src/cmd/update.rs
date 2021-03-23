@@ -1,10 +1,7 @@
 use crate::Op;
-use crate::addon::release_type::ReleaseType;
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::conf::Repo;
-use crate::addon::AddonSlug;
-use crate::print::error::unwrap_addon_info;
 use crate::hard_error;
 use crate::api::files::FilesResult;
 use crate::util::match_str::*;

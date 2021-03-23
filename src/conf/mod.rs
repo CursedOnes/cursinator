@@ -8,7 +8,6 @@ use serde_derive::*;
 
 use crate::addon::GameVersion;
 use crate::addon::local::LocalAddons;
-use crate::hard_error;
 use crate::util::{part_file_path, remove_if};
 use defaults::*;
 

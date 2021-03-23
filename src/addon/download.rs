@@ -1,7 +1,7 @@
 use std::fs::{File, OpenOptions};
 use std::os::unix::prelude::OpenOptionsExt;
 use std::path::{Path, PathBuf};
-use std::io::{ErrorKind, Write};
+use std::io::Write;
 use std::io::Read;
 use std::str::FromStr;
 use std::io::BufRead;

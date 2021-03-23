@@ -26,6 +26,7 @@ impl API {
         Ok(resp)
     }
 
+    #[allow(dead_code)]
     fn test_api() -> Self {
         Self {
             domain: default_domain(),

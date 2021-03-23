@@ -1,7 +1,5 @@
-use termion::style;
-
 use crate::addon::local::LocalAddons;
-use crate::addon::{AddonID, GameVersion};
+use crate::addon::GameVersion;
 use crate::api::AddonInfo;
 use crate::error;
 use crate::hard_error;

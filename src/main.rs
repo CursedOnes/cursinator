@@ -4,8 +4,6 @@ use structopt::*;
 
 fn main() {
     env_logger::init();
-
-    std::env::args();
     
     // init game_version
     // search key

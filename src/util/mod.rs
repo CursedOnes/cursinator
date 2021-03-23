@@ -105,18 +105,22 @@ macro_rules! unwrap_or_error {
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {{
-        use termion::color::*;
-        use termion::style::Bold;
-        use termion::style::Reset as SReset;
-        eprintln!("{}{}error: {}{}{}",Fg(LightRed),Bold,SReset,Fg(Reset),format!($($arg)*));
+        let c = $crate::print::Koller::red_bold();
+        eprintln!("{}{}error: {}{}{}",c.a,c.b,c.c,c.d,format_args!($($arg)*));
     }}
 }
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {{
+        let c = $crate::print::Koller::yellow_bold();
+        eprintln!("{}{}warn: {}{}{}",c.a,c.b,c.c,c.d,format_args!($($arg)*));
+    }}
+}
+#[macro_export]
+macro_rules! dark_log {
+    ($($arg:tt)*) => {{
         use termion::color::*;
-        use termion::style::Bold;
-        use termion::style::Reset as SReset;
-        eprintln!("{}{}warn: {}{}{}",Fg(LightYellow),Bold,SReset,Fg(Reset),format!($($arg)*));
+        let x = format_args!($($arg)*);
+        eprintln!("{}{}{}",color::Fg(color::Rgb(127,127,127)),x,Fg(Reset));
     }}
 }

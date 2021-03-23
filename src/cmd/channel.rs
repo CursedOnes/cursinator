@@ -1,5 +1,4 @@
 use crate::Op;
-use crate::addon::rtm::ReleaseTypeMode;
 use crate::conf::Repo;
 use crate::op::channel::decode_channel;
 use crate::print::error::unwrap_match;

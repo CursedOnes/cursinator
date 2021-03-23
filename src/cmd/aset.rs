@@ -1,7 +1,5 @@
 use std::fmt::Display;
 
-use termion::style::{self, Bold};
-
 use crate::addon::local::UpdateOpt;
 use crate::conf::Repo;
 use crate::util::match_str::find_installed_mod_by_key;

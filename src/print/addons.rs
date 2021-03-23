@@ -1,9 +1,6 @@
 use std::usize;
 
-use termion::color::*;
-use termion::terminal_size;
-
-use crate::addon::local::{LocalAddon, LocalAddons};
+use crate::addon::local::LocalAddons;
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonSlug, GameVersion};
 use crate::api::AddonInfo;
@@ -94,7 +91,7 @@ pub fn print_addon(
     eprintln!(
         "{}{}{}{}{}{}{}{}",
         color.a,color.b,
-        prefix,summary,
+        prefix,summ,
         color.c,color.d,
         suffix1,suffix2
     );

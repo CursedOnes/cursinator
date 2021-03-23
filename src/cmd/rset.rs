@@ -1,6 +1,3 @@
-use structopt::*;
-use termion::style;
-
 use crate::conf::Repo;
 use crate::{Op, error, hard_error};
 use crate::util::match_str::match_str;

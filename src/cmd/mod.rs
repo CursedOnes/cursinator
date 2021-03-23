@@ -1,4 +1,4 @@
-use termion::{color, style};
+use termion::color;
 
 use crate::addon::release_type::ReleaseType;
 use crate::addon::rtm::ReleaseTypeMode;
@@ -6,6 +6,7 @@ use crate::{Op, OpCmd, error, hard_error, log_error};
 use crate::util::match_str::match_str;
 use crate::conf::Repo;
 use crate::api::API;
+use crate::dark_log;
 
 pub mod aset;
 pub mod rset;
@@ -74,7 +75,7 @@ pub fn main(o: Op) {
     };
 
     if modified {
-        eprintln!("{}Write repo json{}",color::Fg(color::Rgb(127,127,127)),color::Fg(color::Reset));
+        dark_log!("Write repo json");
         log_error!(repo.save(&o.conf),|e|"Failed to write repo json: {}",e);
     }
 }

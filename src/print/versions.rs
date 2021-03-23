@@ -1,10 +1,5 @@
-use std::borrow::Borrow;
-
-use termion::{color::*, style};
-use termion::style::Bold;
-
 use crate::addon::rtm::ReleaseTypeMode;
-use crate::addon::{AddonSlug, GameVersion};
+use crate::addon::GameVersion;
 use crate::util::match_str::Match;
 
 use super::*;
@@ -138,12 +133,13 @@ impl AsAddonFile for Match<&AddonFile> {
         self.z
     }
     fn display(&self) -> String {
+        let c = Koller::blue_bold();
         format!(
             "\t{}{}{}{}{}{}{}",
             self.prefix(),
-            Bold,Fg(LightBlue),
+            c.a,c.b,
             self.marked(),
-            style::Reset,Fg(Reset),
+            c.c,c.d,
             self.suffix(),
         )
     }

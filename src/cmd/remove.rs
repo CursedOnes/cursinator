@@ -1,4 +1,4 @@
-use crate::{Op, hard_error};
+use crate::Op;
 use crate::conf::Repo;
 use crate::op::remove::has_dependents;
 use crate::print::error::unwrap_match;
