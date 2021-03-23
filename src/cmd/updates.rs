@@ -6,7 +6,7 @@ use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::api::files::FilesResult;
 use crate::conf::Repo;
-use crate::print::error::unwrap_addon_match;
+use crate::print::error::unwrap_match;
 use crate::print::versions::print_versions;
 use crate::util::match_str::find_installed_mod_by_key;
 use crate::unwrap_result_error;
@@ -22,7 +22,7 @@ pub fn main(
     addon: Option<String>,
 ) -> bool {
     if let Some(addon) = addon {
-        let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons,false/*TODO true*/)).z;
+        let addon_id = unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,false/*TODO true*/)).z;
 
         let addon = &repo.addons.get(&addon_id).unwrap();
 

@@ -11,11 +11,11 @@ pub fn collect_deps(
     installed: &LocalAddons,
     api: &API,
     deps: impl Iterator<Item=AddonID>,
-    install_queue: &mut Vec<LocalAddon>,
     game_version: &GameVersion,
     channel: ReleaseTypeMode,
     update_opt: UpdateOpt,
     version_blacklist: &Option<String>,
+    install_queue: &mut Vec<LocalAddon>,
 ) {
     // version picking for deps:
     // 1. if explicit version for parent, filter to-install dep versions before specific date
@@ -59,11 +59,11 @@ pub fn collect_deps(
             installed,
             api,
             dep_file.dependencies.iter_required(),
-            install_queue,
             game_version,
             z_channel, //TODO z or non-z?
             z_update_opt,
             &z_version_blacklist,
+            install_queue,
         );
 
         let new_dep = LocalAddon {

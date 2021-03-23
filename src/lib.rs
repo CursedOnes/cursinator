@@ -61,9 +61,11 @@ pub enum OpCmd {
         release: bool,
         #[structopt(short="f",long,help="Update even if incompatibility occurs")]
         force: bool,
+        #[structopt(short="d",long="allow-downgrade",help="Allow downgrade (explicit version install always allows downgrade)")]
+        allow_downgrade: bool,
         #[structopt(help="slug")]
         addon: String, // if "list", do list -u
-        #[structopt(help="version")]
+        #[structopt(help="Explicit version")]
         file: Option<String>,
     },
     #[structopt(name = "channel", about = "Set/Get release mode channel for addon", help = "Set/Get release mode channel for addon\n\nExample:\ncursinator channel iron-chests    | shows current channel\ncursinator channel iron-chests ba | set channel to ba\n\nChannel is denoted by the letters\n\nChannel examples:\nr = latest release\nb = latest beta-ish (beta/release)\na = latest alpha-ish\nrb = latest release, if no release available, fallback to latest beta-ish\nba = latest beta-ish, fallback to alpha\nrba (default) = latest release, fallback to beta or alpha\nra = release, fallback to alpha\nOrder doesn't matter: abr = arb = bar = rba")]

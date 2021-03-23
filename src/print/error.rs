@@ -8,7 +8,7 @@ use crate::hard_error;
 use crate::util::match_str::Match;
 use crate::print::addons::print_addons_search;
 
-pub fn unwrap_addon_match(r: Result<Match<AddonID>,Vec<Match<AddonID>>>) -> Match<AddonID> {
+pub fn unwrap_match<T>(r: Result<Match<T>,Vec<Match<T>>>) -> Match<T> {
     match r {
         Ok(r) => r,
         Err(e) if e.is_empty() => hard_error!("Not match for installed addon"),

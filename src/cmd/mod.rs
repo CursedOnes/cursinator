@@ -45,8 +45,8 @@ pub fn main(o: Op) {
         OpCmd::Init { .. } => unreachable!(),
         OpCmd::Install { alpha, beta, release, force, slug, file } =>
             install::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,slug,file),
-        OpCmd::Update { alpha, beta, release, force, addon, file } => 
-            update::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,addon,file),
+        OpCmd::Update { alpha, beta, release, allow_downgrade, force, addon, file } => 
+            update::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),allow_downgrade,force,addon,file),
         OpCmd::Channel { addon, value } => 
             channel::main(&o,&mut repo,addon,value),
         OpCmd::List {} => 

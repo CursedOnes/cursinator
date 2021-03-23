@@ -6,7 +6,7 @@ use super::{FileGameVersion, FileID};
 use super::dependency::Dependencies;
 use super::release_type::ReleaseType;
 
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize,Serialize,Clone)]
 #[serde(rename_all(deserialize="camelCase"))]
 pub struct AddonFile {
     pub id: FileID,

@@ -1,7 +1,7 @@
 use crate::{Op, hard_error};
 use crate::conf::Repo;
 use crate::op::remove::has_dependents;
-use crate::print::error::unwrap_addon_match;
+use crate::print::error::unwrap_match;
 use crate::util::match_str::find_installed_mod_by_key;
 use crate::{error,warn,unwrap_result_error};
 
@@ -11,7 +11,7 @@ pub fn main(
     force: bool,
     addon: String,
 ) -> bool {
-    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons,false)).z;
+    let addon_id = unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,false)).z;
 
     let dependents = has_dependents(addon_id, &repo.addons);
 
@@ -24,12 +24,10 @@ pub fn main(
             warn!("Removing Addon with dependents: {}{}",slug,o.suffix());
         }
 
-        if !dependents.is_empty() {
-            for d in dependents {
-                eprint!(" {}",d.slug);
-            }
-            eprintln!("{}",o.suffix());
+        for d in dependents {
+            eprint!(" {}",d.slug);
         }
+        eprintln!("{}",o.suffix());
 
         if !force {
             std::process::exit(1);
