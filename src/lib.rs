@@ -47,7 +47,7 @@ pub enum OpCmd {
         #[structopt(short="f",long,help="Install even if incompatibility occurs")]
         force: bool,
         #[structopt(help="slug")]
-        addon: String,
+        slug: String,
         #[structopt(help="version")]
         file: Option<String>,
     },

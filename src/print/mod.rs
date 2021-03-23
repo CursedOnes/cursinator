@@ -8,12 +8,11 @@ pub mod versions;
 pub mod addons;
 pub mod error;
 
-pub fn color_of_release_type(rt: &ReleaseType) -> &'static str {
-    use termion::color::*;
+pub fn color_of_release_type(rt: &ReleaseType) -> Koller {
     match rt {
-        ReleaseType::Alpha   => LightRed.fg_str(),
-        ReleaseType::Beta    => LightYellow.fg_str(),
-        ReleaseType::Release => LightGreen.fg_str(),
+        ReleaseType::Alpha   => Koller::red_bold(),
+        ReleaseType::Beta    => Koller::yellow_bold(),
+        ReleaseType::Release => Koller::green_bold(),
     }
 }
 pub fn release_type_prefix(rt: &ReleaseType) -> &'static str {
@@ -54,6 +53,104 @@ impl Op {
         match self.noop {
             true => format!(" {}(noop){}",Fg(Rgb(127,127,127)),Fg(Reset)),
             false => "".to_owned()
+        }
+    }
+}
+
+#[derive(Clone,Copy)]
+pub struct Koller {
+    pub a: &'static str,
+    pub b: &'static str,
+    pub c: &'static str,
+    pub d: &'static str,
+}
+
+impl Koller {
+    pub fn red_bold() -> Self {
+        use termion::color::*;
+        use termion::style as S;
+        Self {
+            a: LightRed.fg_str(),
+            b: S::Bold.as_ref(),
+            c: S::Reset.as_ref(),
+            d: Reset.fg_str(),
+        }
+    }
+    pub fn yellow_bold() -> Self {
+        use termion::color::*;
+        use termion::style as S;
+        Self {
+            a: LightYellow.fg_str(),
+            b: S::Bold.as_ref(),
+            c: S::Reset.as_ref(),
+            d: Reset.fg_str(),
+        }
+    }
+    pub fn green_bold() -> Self {
+        use termion::color::*;
+        use termion::style as S;
+        Self {
+            a: LightGreen.fg_str(),
+            b: S::Bold.as_ref(),
+            c: S::Reset.as_ref(),
+            d: Reset.fg_str(),
+        }
+    }
+    pub fn blue_bold() -> Self {
+        use termion::color::*;
+        use termion::style as S;
+        Self {
+            a: LightBlue.fg_str(),
+            b: S::Bold.as_ref(),
+            c: S::Reset.as_ref(),
+            d: Reset.fg_str(),
+        }
+    }
+    pub fn red() -> Self {
+        use termion::color::*;
+        Self {
+            a: LightRed.fg_str(),
+            b: "",
+            c: "",
+            d: Reset.fg_str(),
+        }
+    }
+    pub fn yellow() -> Self {
+        use termion::color::*;
+        Self {
+            a: LightYellow.fg_str(),
+            b: "",
+            c: "",
+            d: Reset.fg_str(),
+        }
+    }
+    pub fn green() -> Self {
+        use termion::color::*;
+        Self {
+            a: LightGreen.fg_str(),
+            b: "",
+            c: "",
+            d: Reset.fg_str(),
+        }
+    }
+    pub fn blue() -> Self {
+        use termion::color::*;
+        Self {
+            a: LightBlue.fg_str(),
+            b: "",
+            c: "",
+            d: Reset.fg_str(),
+        }
+    }
+}
+
+impl Default for Koller {
+    fn default() -> Self {
+        Self {
+            a: "",
+            b: "",
+            c: "",
+            d: "",
         }
     }
 }

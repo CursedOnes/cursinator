@@ -18,7 +18,7 @@ pub fn main(
     value: Option<String>
 ) -> bool {
     let addons = &mut repo.addons;
-    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,addons)).z;
+    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,addons,true)).z;
     let addon = addons.get_mut(&addon_id).unwrap();
 
     if let Some(key) = key {

@@ -11,26 +11,32 @@ pub fn main(
     force: bool,
     addon: String,
 ) -> bool {
-    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons)).z;
+    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons,false)).z;
 
     let dependents = has_dependents(addon_id, &repo.addons);
 
+    let slug = &repo.addons.get(&addon_id).unwrap().slug;
+
     if !dependents.is_empty() {
         if !force {
-            error!("Addon has dependents:{}",o.suffix());
+            error!("Addon has dependents: {}{}",slug,o.suffix());
         } else {
-            warn!("Removing Addon with dependents:{}",o.suffix());
+            warn!("Removing Addon with dependents: {}{}",slug,o.suffix());
         }
 
-        for d in dependents {
-            eprint!(" {}",d.slug);
+        if !dependents.is_empty() {
+            for d in dependents {
+                eprint!(" {}",d.slug);
+            }
+            eprintln!("{}",o.suffix());
         }
-        eprintln!("{}",o.suffix());
 
         if !force {
             std::process::exit(1);
         }
     }
+
+    eprintln!("Removing: {}{}",slug,o.suffix());
 
     if !o.noop {
         let addon = repo.addons.get_mut(&addon_id).unwrap();

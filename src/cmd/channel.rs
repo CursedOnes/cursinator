@@ -11,7 +11,7 @@ pub fn main(
     addon: String,
     value: Option<String>,
 ) -> bool {
-    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons)).z;
+    let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons,true)).z;
 
     if let Some(value) = value {
         let new_channel = decode_channel(&value);

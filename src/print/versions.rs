@@ -18,7 +18,7 @@ pub fn print_versions(
     print_older: bool,
     max_h: usize,
 ){
-    let mut current_idx = 0;
+    let mut current_idx = 0; // includes current version
     if let Some(current) = current {
         for v in versions {
             if v.file().id.0 < current.id.0 {
@@ -75,12 +75,14 @@ pub fn print_versions(
         if let Some(f) = f {
             let color =
                 if current.is_some() && f.id == current.unwrap().id {
-                    Blue.fg_str()
+                    Koller::blue_bold()
                 }else{
                     color_of_release_type(&f.release_type)
                 };
-            eprintln!("{}{}{}{}",
-                color,release_type_prefix(&f.release_type),Fg(Reset),
+            eprintln!("{}{}{}{}{}{}",
+                color.a,color.b,
+                release_type_prefix(&f.release_type),
+                color.c,color.d,
                 f.display(),
             );
         }else{

@@ -9,13 +9,13 @@ use crate::addon::release_type::ReleaseType;
 
 use super::*;
 
-pub fn find_installed_mod_by_key(s: &str, v: &LocalAddons) -> Result<Match<AddonID>,Vec<Match<AddonID>>> {
+pub fn find_installed_mod_by_key(s: &str, v: &LocalAddons, purge_mode: bool) -> Result<Match<AddonID>,Vec<Match<AddonID>>> {
     let make_iter = || {
         let iter_slug = v.values()
-            .filter(|v| v.installed.is_some() )
+            .filter(|v| v.installed.is_some() || purge_mode )
             .map(|v| (v.id,&v.slug.0 as &str) );
         let iter_name = v.values()
-            .filter(|v| v.installed.is_some() )
+            .filter(|v| v.installed.is_some() || purge_mode )
             .map(|v| (v.id,&v.name as &str) );
         let iter_filename = v.values() 
             .filter_map(|v| v.installed.as_ref().map(|w| (v.id,w) ) )

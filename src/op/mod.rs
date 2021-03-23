@@ -4,3 +4,4 @@ pub mod autoremove;
 pub mod channel;
 pub mod remove;
 pub mod install;
+pub mod update;

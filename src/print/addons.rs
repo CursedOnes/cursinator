@@ -21,9 +21,9 @@ pub fn print_addons_search(
                 &a.name,
                 &a.summary,
                 Some(release_type),
-                todo!(),
+                installed.get(&a.id).and_then(|a| a.installed.as_ref() ).map(|a| a.release_type ),
                 term_w() as usize,
-                Reset.fg_str()
+                Default::default(),
             );
         } else {
             print_addon(
@@ -33,7 +33,7 @@ pub fn print_addons_search(
                 None,
                 None,
                 term_w() as usize,
-                LightRed.fg_str()
+                Koller::red_bold(),
             );
         }
     }
@@ -51,7 +51,7 @@ pub fn print_addons_local(
                 None,
                 Some(addon_file.release_type),
                 term_w() as usize,
-                Reset.fg_str()
+                Default::default(),
             );
         }
     }
@@ -64,18 +64,20 @@ pub fn print_addon(
     avail_rt: Option<ReleaseType>,
     installed_rt: Option<ReleaseType>,
     max_width: usize,
-    color: &str,
+    color: Koller,
 ) {
     let prefix = format!("{}: {}",slug,name);
 
     let mut suffix1 = "".to_owned();
     if let Some(rt) = avail_rt {
-        suffix1 = format!(" {}{}{}",color_of_release_type(&rt),release_type_prefix(&rt),Fg(Reset));
+        let c = color_of_release_type(&rt);
+        suffix1 = format!(" {}{}{}{}{}",c.a,c.b,release_type_prefix(&rt),c.c,c.d);
     }
 
     let mut suffix2 = "".to_owned();
     if let Some(rt) = installed_rt {
-        suffix2 = format!(" @{}{}{}",color_of_release_type(&rt),release_type_prefix(&rt),Fg(Reset));
+        let c = color_of_release_type(&rt);
+        suffix2 = format!(" @{}{}{}{}{}",c.a,c.b,release_type_prefix(&rt),c.c,c.d);
     }
 
     let summary_width = max_width - prefix.len() - suffix1.len() - suffix2.len();
@@ -89,5 +91,11 @@ pub fn print_addon(
         }
     }
 
-    eprintln!("{}{}{}{}{}{}",color,prefix,summary,Fg(Reset),suffix1,suffix2);
+    eprintln!(
+        "{}{}{}{}{}{}{}{}",
+        color.a,color.b,
+        prefix,summary,
+        color.c,color.d,
+        suffix1,suffix2
+    );
 }

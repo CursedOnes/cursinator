@@ -1,4 +1,6 @@
-use crate::{Op, hard_error};
+use crate::op::update::find_version_update;
+use crate::print::addons::print_addon;
+use crate::{Op, error, hard_error};
 use crate::addon::release_type::ReleaseType;
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
@@ -8,7 +10,7 @@ use crate::print::error::unwrap_addon_match;
 use crate::print::versions::print_versions;
 use crate::util::match_str::find_installed_mod_by_key;
 use crate::unwrap_result_error;
-use crate::print::term_h;
+use crate::print::{Koller, term_h};
 
 pub fn main(
     o: &Op,
@@ -20,7 +22,7 @@ pub fn main(
     addon: Option<String>,
 ) -> bool {
     if let Some(addon) = addon {
-        let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons)).z;
+        let addon_id = unwrap_addon_match(find_installed_mod_by_key(&addon,&repo.addons,false/*TODO true*/)).z;
 
         let addon = &repo.addons.get(&addon_id).unwrap();
 
@@ -39,7 +41,48 @@ pub fn main(
             if show_all {16384} else {term_h().saturating_sub(4) as usize},
         );
     } else {
-        todo!();
+        for a in repo.addons.values() {
+            let installed = match &a.installed {
+                Some(h) => h,
+                None => continue,
+            };
+
+            let versions = match api.files(a.id) {
+                FilesResult::Ok(f) => f,
+                FilesResult::NotFound => {error!("No online information for installed addon");continue},
+                FilesResult::Error(e) => {error!("Failed to fetch online information: {}",e);continue},
+            };
+
+            let new = find_version_update(
+                &versions,
+                Some(installed.id),
+                &repo.conf.game_version,
+                a.channel,
+                list_older,
+            );
+
+            if let Some(new) = new {
+                print_addon(
+                    &a.slug,
+                    &a.name,
+                    "",
+                    Some(new.release_type),
+                    Some(installed.release_type),
+                    term_h() as usize,
+                    if show_all {Koller::blue_bold()} else {Default::default()},
+                );
+            } else if show_all {
+                print_addon(
+                    &a.slug,
+                    &a.name,
+                    "",
+                    None,
+                    Some(installed.release_type),
+                    term_h() as usize,
+                    Default::default(),
+                );
+            }
+        }
     }
     false
 }

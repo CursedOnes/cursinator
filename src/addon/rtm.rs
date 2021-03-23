@@ -3,6 +3,8 @@ use std::fmt::Display;
 use std::ops::BitOr;
 use serde_derive::*;
 
+use super::GameVersion;
+use super::files::AddonFile;
 use super::release_type::ReleaseType;
 
 #[derive(Deserialize,Serialize,Clone,Copy,PartialEq)]
@@ -49,6 +51,27 @@ impl ReleaseTypeMode {
         }
         if r.is_none() && self.alpha {
             r = find_legal(v, ReleaseType::Alpha);
+        }
+
+        r
+    }
+    pub fn pick_version_2<'a>(&self, v: &'a [AddonFile], gv: &GameVersion) -> Option<&'a AddonFile> {
+        fn find_legal<'a>(v: &'a [AddonFile], g: ReleaseType, gv: &GameVersion) -> Option<&'a AddonFile> {
+            v.iter()
+                .filter(|v| gv.matches(v.game_version.iter()) )
+                .find(|v| v.release_type >= g )
+        }
+
+        let mut r = None;
+
+        if r.is_none() && self.release {
+            r = find_legal(v, ReleaseType::Release, gv);
+        }
+        if r.is_none() && self.beta {
+            r = find_legal(v, ReleaseType::Beta, gv);
+        }
+        if r.is_none() && self.alpha {
+            r = find_legal(v, ReleaseType::Alpha, gv);
         }
 
         r

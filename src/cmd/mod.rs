@@ -43,8 +43,8 @@ pub fn main(o: Op) {
     let modified =
     match o.cmd.clone() {
         OpCmd::Init { .. } => unreachable!(),
-        OpCmd::Install { alpha, beta, release, force, addon, file } =>
-            install::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,addon,file),
+        OpCmd::Install { alpha, beta, release, force, slug, file } =>
+            install::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,slug,file),
         OpCmd::Update { alpha, beta, release, force, addon, file } => 
             update::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,addon,file),
         OpCmd::Channel { addon, value } => 
