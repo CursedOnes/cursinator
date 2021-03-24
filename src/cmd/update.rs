@@ -30,6 +30,10 @@ pub fn main(
         FilesResult::Error(e) => hard_error!("Failed to fetch online information: {}",e),
     };
 
+    if versions.iter().find(|v| repo.conf.game_version.matches(v.game_version.iter()) ).is_none() {
+        hard_error!("No version for current game version");
+    }
+
     let channel = rt.unwrap_or(addon.channel); //TODO use channel from previous install
 
     let file;

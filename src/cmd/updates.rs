@@ -30,6 +30,10 @@ pub fn main(
             FilesResult::Error(e) => hard_error!("Failed to fetch online information: {}",e),
         };
 
+        if versions.iter().find(|v| repo.conf.game_version.matches(v.game_version.iter()) ).is_none() {
+            hard_error!("No version for current game version");
+        }
+
         print_versions(
             &versions,
             Some(addon.installed.as_ref().unwrap()),
@@ -50,6 +54,10 @@ pub fn main(
                 FilesResult::NotFound => {error!("No online information for installed addon");continue},
                 FilesResult::Error(e) => {error!("Failed to fetch online information: {}",e);continue},
             };
+
+            if versions.iter().find(|v| repo.conf.game_version.matches(v.game_version.iter()) ).is_none() {
+                error!("No version for current game version: {}",a.slug);
+            }
 
             let new = find_version_update(
                 &versions,

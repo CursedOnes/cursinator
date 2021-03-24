@@ -42,6 +42,10 @@ pub fn main(
                 FilesResult::Error(e) => {error!("Failed to fetch online information: {}",e);continue},
             };
 
+            if versions.iter().find(|v| repo.conf.game_version.matches(v.game_version.iter()) ).is_none() {
+                error!("No version for current game version: {}",addon.slug);
+            }
+
             let new = find_version_update(
                 &versions,
                 Some(installed.id),

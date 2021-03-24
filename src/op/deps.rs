@@ -47,6 +47,10 @@ pub fn collect_deps(
             FilesResult::Error(e) => hard_error!("Failed to fetch dependency: {}",e),
         };
 
+        if dep_files.iter().find(|v| game_version.matches(v.game_version.iter()) ).is_none() {
+            hard_error!("No version for current game version: {}",dep_info.slug);
+        }
+
         let dep_file = unwrap_or_error!(
             z_channel.pick_version_2(&dep_files,game_version),
             "No version found to install"
