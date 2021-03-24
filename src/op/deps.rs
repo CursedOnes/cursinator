@@ -22,6 +22,7 @@ pub fn collect_deps(
 
     for dep_id in deps {
         if installed.contains_key(&dep_id) {continue}
+        if install_queue.iter().find(|a| a.id == dep_id ).is_some() {continue}
 
         let mut z_channel = channel;
         let mut z_update_opt = update_opt;
