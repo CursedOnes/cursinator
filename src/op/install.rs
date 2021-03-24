@@ -128,12 +128,9 @@ pub fn install_mod(
             );
             if !o.noop {
                 unwrap_result_error!(installed.remove(),|e|"Failed to remove addon: {}",e);
+                addon.installed = None;
                 modified = true;
             }
-        }
-        if !o.noop {
-            addon.installed = None;
-            modified = true;
         }
     }
 

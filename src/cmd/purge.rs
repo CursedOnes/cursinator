@@ -56,8 +56,8 @@ pub fn main(
                     installed.remove(),
                     |e|"Failed to purge addon: {}",e
                 );
+                addon.installed = None;
             }
-            addon.installed = None;
             repo.addons.remove(&addon_id);
             return true;
         }
