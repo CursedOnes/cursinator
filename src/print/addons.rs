@@ -13,14 +13,15 @@ pub fn print_addons_search(
 ){
     for a in addons {
         if let Some(release_type) = a.release_type(game_version) {
+            let installed = installed.get(&a.id).and_then(|a| a.installed.as_ref() );
             print_addon(
                 &a.slug,
                 &a.name,
                 &a.summary,
                 Some(release_type),
-                installed.get(&a.id).and_then(|a| a.installed.as_ref() ).map(|a| a.release_type ),
+                installed.map(|a| a.release_type ),
                 term_w() as usize,
-                Default::default(),
+                if installed.is_some() {Koller::blue()} else {Default::default()},
             );
         } else {
             print_addon(
