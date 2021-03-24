@@ -8,7 +8,7 @@ use crate::conf::Repo;
 use crate::print::error::unwrap_match;
 use crate::print::versions::print_versions;
 use crate::util::match_str::find_installed_mod_by_key;
-use crate::print::{Koller, term_h};
+use crate::print::{Koller, term_w, term_h};
 
 pub fn main(
     _: &Op,
@@ -36,7 +36,7 @@ pub fn main(
             rt.unwrap_or(addon.channel),
             &repo.conf.game_version,
             list_older,
-            if show_all {16384} else {term_h().saturating_sub(4) as usize},
+            if show_all {16384} else {term_h().saturating_sub(4).max(16) as usize},
         );
     } else {
         for a in repo.addons.values() {
@@ -66,7 +66,7 @@ pub fn main(
                     "",
                     Some(new.release_type),
                     Some(installed.release_type),
-                    term_h() as usize,
+                    term_w() as usize,
                     if show_all {Koller::blue_bold()} else {Default::default()},
                 );
             } else if show_all {
@@ -76,7 +76,7 @@ pub fn main(
                     "",
                     None,
                     Some(installed.release_type),
-                    term_h() as usize,
+                    term_w() as usize,
                     Default::default(),
                 );
             }

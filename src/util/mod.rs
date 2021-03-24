@@ -106,21 +106,21 @@ macro_rules! unwrap_or_error {
 macro_rules! error {
     ($($arg:tt)*) => {{
         let c = $crate::print::Koller::red_bold();
-        eprintln!("{}{}error: {}{}{}",c.a,c.b,c.c,c.d,format_args!($($arg)*));
+        eprintln!("{}{}error: {}{}{}",c.a,c.b,c.c,c.d,format!($($arg)*));
     }}
 }
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {{
         let c = $crate::print::Koller::yellow_bold();
-        eprintln!("{}{}warn: {}{}{}",c.a,c.b,c.c,c.d,format_args!($($arg)*));
+        eprintln!("{}{}warn: {}{}{}",c.a,c.b,c.c,c.d,format!($($arg)*));
     }}
 }
 #[macro_export]
 macro_rules! dark_log {
     ($($arg:tt)*) => {{
         use termion::color::*;
-        let x = format_args!($($arg)*);
-        eprintln!("{}{}{}",color::Fg(color::Rgb(127,127,127)),x,Fg(Reset));
+        let x = format!($($arg)*);
+        eprintln!("{}{}{}",Fg(Rgb(127,127,127)),x,Fg(Reset));
     }}
 }

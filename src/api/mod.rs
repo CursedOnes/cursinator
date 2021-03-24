@@ -1,7 +1,7 @@
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
 use crate::conf::defaults::{default_domain, default_headers};
-use crate::hard_error;
+use crate::{dark_log, hard_error};
 
 pub mod search;
 pub mod files;
@@ -17,6 +17,7 @@ pub struct API {
 impl API {
     pub fn http_get(&self, url: &str) -> Result<ureq::Response,ureq::Error> {
         if self.offline {hard_error!("Offline mode")};
+        dark_log!("API: {}",url);
         let mut req = ureq::get(url);
         for (h,v) in &self.headers {
             req = req.set(h,v);

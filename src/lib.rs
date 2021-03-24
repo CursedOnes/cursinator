@@ -36,6 +36,15 @@ pub enum OpCmd {
         #[structopt(short="G",long,help="gv")]
         game_version_regex: Option<String>,
     },
+    #[structopt(about = "Search online for addon")]
+    Search {
+        #[structopt(short="p",long="page-size",default_value="0",help="# results (0=dynamic)")]
+        page_size: u32,
+        #[structopt(short="n",long="page-n",default_value="0",help="page index")]
+        page_n: u32,
+        #[structopt(help="addon")]
+        addon: String,
+    },
     #[structopt(about = "Install addon")]
     Install {
         #[structopt(short,long,help="ignored if explicit version given")]
