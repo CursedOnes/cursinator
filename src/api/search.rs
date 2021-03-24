@@ -21,6 +21,7 @@ impl API {
         anyhow::ensure!(slug.0.len() != 0, "to-search slug cannot be empty");
         match self._search_slug(slug,0,64) {
             Ok(Err(e)) => {
+                if e.len() < 64 {return Ok(Err(e));}
                 let mut i = 0;
                 loop{
                     match self._search_slug(slug,i,10000) {

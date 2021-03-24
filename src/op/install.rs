@@ -63,9 +63,8 @@ pub fn install_mod(
         }
 
         for i in incompat {
-            eprint!("    {} => {}",i.from.slug,i.to.slug);
+            eprintln!("\t{} => {}{}",i.from.slug,i.to.slug,o.suffix());
         }
-        eprintln!("{}",o.suffix());
 
         if !force_incompat {
             std::process::exit(1);
@@ -75,7 +74,12 @@ pub fn install_mod(
     let mut modified = false;
 
     for i in install_queue {
-        eprintln!("Install: {}{}",i.slug,o.suffix());
+        eprintln!(
+            "Install: {} ({}){}",
+            i.slug,
+            i.installed.as_ref().unwrap().file_name,
+            o.suffix()
+        );
         if !o.noop {
             let finalizer = unwrap_result_error!(
                 i.installed.as_ref().unwrap().download(&repo.conf,api),
@@ -87,14 +91,15 @@ pub fn install_mod(
         }
     }
 
-    let mut was_installed = false;
-    if let Some(addon) = repo.addons.get(&addon_id) {
-        if addon.installed.is_some() {
-            was_installed = true;
-        }
-    }
+    eprintln!(
+        "Install: {} ({}){}",
+        i_slug,
+        install.file_name,
+        o.suffix()
+    );
 
-    eprintln!("Install {}{}",i_slug,o.suffix());
+    let mut set_new = None;
+
     if !o.noop {
         let finalizer = unwrap_result_error!(
             install.download(&repo.conf,api),
@@ -102,7 +107,7 @@ pub fn install_mod(
         );
         finalizer_queue.push(finalizer);
     
-        let new = LocalAddon {
+        set_new = Some(LocalAddon {
             id: addon_id,
             slug: i_slug,
             name: i_name,
@@ -111,27 +116,30 @@ pub fn install_mod(
             manually_installed,
             version_blacklist,
             installed: Some(install),
-        };
-
-        repo.addons.insert(addon_id,new);
-
-        modified = true;
+        });
     }
 
-    if was_installed {
-        if let Some(addon) = repo.addons.get_mut(&addon_id) {
-            if let Some(installed) = &mut addon.installed {
-                eprintln!("Uninstall previous version of {}{}",addon.slug,o.suffix());
-                if !o.noop {
-                    unwrap_result_error!(installed.remove(),|e|"Failed to remove addon: {}",e);
-                    modified = true;
-                }
-            }
+    if let Some(addon) = repo.addons.get_mut(&addon_id) {
+        if let Some(installed) = &mut addon.installed {
+            eprintln!(
+                "Remove previous version: {}{}",
+                installed.file_name,
+                o.suffix()
+            );
             if !o.noop {
-                addon.installed = None;
+                unwrap_result_error!(installed.remove(),|e|"Failed to remove addon: {}",e);
                 modified = true;
             }
         }
+        if !o.noop {
+            addon.installed = None;
+            modified = true;
+        }
+    }
+
+    if let Some(new) = set_new {
+        repo.addons.insert(addon_id,new);
+        modified = true;
     }
 
     drop(finalizer_queue);

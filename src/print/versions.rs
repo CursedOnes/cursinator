@@ -68,17 +68,23 @@ pub fn print_versions(
     
     for f in visible.iter() {
         if let Some(f) = f {
-            let color =
-                if current.is_some() && f.id == current.unwrap().id {
-                    Koller::blue_bold()
-                }else{
-                    color_of_release_type(&f.release_type)
-                };
-            eprintln!("{}{}{}{}{}{}",
+            let color = color_of_release_type(&f.release_type);
+            let (pcolor,prefix);
+            if current.is_some() && f.id == current.unwrap().id {
+                pcolor = Koller::blue_bold();
+                prefix = "INSTALLED: ";
+            }else{
+                pcolor = color_of_release_type_bold(&f.release_type);
+                prefix = release_type_prefix(&f.release_type);
+            };
+            eprintln!(
+                "{}{}{}{}{}{}{}{}{}{}",
+                pcolor.a,pcolor.b,
+                prefix,
+                pcolor.c,pcolor.d,
                 color.a,color.b,
-                release_type_prefix(&f.release_type),
-                color.c,color.d,
                 f.display(),
+                color.c,color.d,
             );
         }else{
             eprintln!("...");

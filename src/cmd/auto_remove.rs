@@ -30,6 +30,7 @@ pub fn main(
                 repeat = true;
             } else {
                 repo.addons.remove(&id);
+                repeat = true;
             }
         }
 

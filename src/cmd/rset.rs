@@ -49,12 +49,12 @@ pub fn main(
 }
 
 fn match_key(s: &str) -> WhatRSet {
-    let to_match = &[
-        (WhatRSet::UrlTxt,"url-txt"),
-        (WhatRSet::AddonMtime,"addon-mtime"),
-        (WhatRSet::SoftRetries,"soft-retries"),
-    ];
-    match match_str(s,||to_match.iter().cloned()) {
+    let to_match = vec![vec![
+        (WhatRSet::UrlTxt,"url-txt".to_owned()),
+        (WhatRSet::AddonMtime,"addon-mtime".to_owned()),
+        (WhatRSet::SoftRetries,"soft-retries".to_owned()),
+    ]];
+    match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("Not match for setting"),
         Err(e) => {

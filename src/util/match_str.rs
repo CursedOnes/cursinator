@@ -10,41 +10,42 @@ use crate::print::Koller;
 use super::*;
 
 pub fn find_installed_mod_by_key(s: &str, v: &LocalAddons, purge_mode: bool) -> Result<Match<AddonID>,Vec<Match<AddonID>>> {
-    let make_iter = || {
         let iter_slug = v.values()
             .filter(|v| v.installed.is_some() || purge_mode )
-            .map(|v| (v.id,&v.slug.0 as &str) );
+            .map(|v| (v.id,v.slug.0.trim().to_owned()) )
+            .collect();
         let iter_name = v.values()
             .filter(|v| v.installed.is_some() || purge_mode )
-            .map(|v| (v.id,&v.name as &str) );
+            .map(|v| (v.id,v.name.trim().to_owned()) )
+            .collect();
         let iter_filename = v.values() 
             .filter_map(|v| v.installed.as_ref().map(|w| (v.id,w) ) )
             .map(|(z,v)| {
-                let v = &v.file_name;
+                let v = v.file_name.trim();
                 if let Some(i) = v.rfind('/') {
-                    (z,&v[i+1..])
+                    (z,v[i+1..].to_owned())
                 }else{
-                    (z,&v[..])
+                    (z,v[..].to_owned())
                 }
-            });
-        iter_slug.chain(iter_name).chain(iter_filename)
-    };
-    match_str::match_str(s,make_iter)
+            })
+            .collect();
+
+    match_str::match_str(s,vec![iter_slug,iter_name,iter_filename])
 }
 pub fn find_to_install_version_by_key<'a>(s: &str, v: &'a [AddonFile], game_version: &GameVersion) -> Result<Match<&'a AddonFile>,Vec<Match<&'a AddonFile>>> {
-    let make_iter = || {
         let iter_display_name = v.iter()
             .filter(|v| game_version.matches(v.game_version.iter()) )
-            .map(|v| (v,&v.display_name as &str) );
+            .map(|v| (v,v.display_name.trim().to_owned()) )
+            .collect();
         let iter_file_name = v.iter()
             .filter(|v| game_version.matches(v.game_version.iter()) )
-            .map(|v| (v,&v.file_name as &str) );
-        iter_display_name.chain(iter_file_name)
-    };
-    match_str::match_str(s,make_iter)
+            .map(|v| (v,v.file_name.trim().to_owned()) )
+            .collect();
+
+    match_str::match_str(s,vec![iter_display_name,iter_file_name])
 }
 
-pub fn match_str<'a,T,I,Z>(s: &str, src: T) -> Result<Match<Z>,Vec<Match<Z>>> where T: Fn() -> I, I: Iterator<Item=(Z,&'a str)>, Z: Clone {
+pub fn match_str<'a,Z>(s: &str, mut srcs: Vec<Vec<(Z,String)>>) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
     fn match_in<'a,Z>(s: &str, src: &[(Z,String)]) -> Vec<Match<Z>> where Z: Clone {
         src.iter()
             .filter_map(|(z,v)| {
@@ -61,32 +62,41 @@ pub fn match_str<'a,T,I,Z>(s: &str, src: T) -> Result<Match<Z>,Vec<Match<Z>>> wh
     // 3. no spaces
     let s = s.trim();
 
-    let mut srcs: Vec<(Z,String)> = src().map(|(z,s)| (z,s.trim().to_owned()) ).collect();
-    
-    let mut matches = match_in(s,&srcs);
-    if matches.len() == 1 {return Ok(matches.swap_remove(0));}
-    if matches.len() > 1 {return Err(matches);}
+    for src in &srcs[..] {
+        let mut matches = match_in(s,src);
+        if matches.len() == 1 {return Ok(matches.swap_remove(0));}
+        if matches.len() > 1 {return Err(matches);}
+    }
 
     let s = s.to_ascii_lowercase();
-    for s in &mut srcs {s.1.make_ascii_lowercase();}
 
-    let mut matches = match_in(&s,&srcs);
-    if matches.len() == 1 {return Ok(matches.swap_remove(0));}
-    if matches.len() > 1 {return Err(matches);}
+    for src in &mut srcs[..] {
+        for s in src.iter_mut() {s.1.make_ascii_lowercase();}
+
+        let mut matches = match_in(&s,src);
+        if matches.len() == 1 {return Ok(matches.swap_remove(0));}
+        if matches.len() > 1 {return Err(matches);}
+    }
 
     let s = s.replace(' ',"_").replace('-',"_");
-    for s in &mut srcs {s.1 = s.1.replace(' ',"_").replace('-',"_");}
 
-    let mut matches = match_in(&s,&srcs);
-    if matches.len() == 1 {return Ok(matches.swap_remove(0));}
-    if matches.len() > 1 {return Err(matches);}
+    for src in &mut srcs[..] {
+        for s in src.iter_mut() {s.1 = s.1.replace(' ',"_").replace('-',"_");}
+
+        let mut matches = match_in(&s,src);
+        if matches.len() == 1 {return Ok(matches.swap_remove(0));}
+        if matches.len() > 1 {return Err(matches);}
+    }
 
     let s = s.replace('_',"");
-    for s in &mut srcs {s.1 = s.1.replace('_',"");}
 
-    let mut matches = match_in(&s,&srcs);
-    if matches.len() == 1 {return Ok(matches.swap_remove(0));}
-    if matches.len() > 1 {return Err(matches);}
+    for src in &mut srcs[..] {
+        for s in src.iter_mut() {s.1 = s.1.replace('_',"");}
+
+        let mut matches = match_in(&s,src);
+        if matches.len() == 1 {return Ok(matches.swap_remove(0));}
+        if matches.len() > 1 {return Err(matches);}
+    }
 
     Err(vec![])
 }

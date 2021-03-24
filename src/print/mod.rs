@@ -10,6 +10,13 @@ pub mod error;
 
 pub fn color_of_release_type(rt: &ReleaseType) -> Koller {
     match rt {
+        ReleaseType::Alpha   => Koller::red(),
+        ReleaseType::Beta    => Koller::yellow(),
+        ReleaseType::Release => Koller::green(),
+    }
+}
+pub fn color_of_release_type_bold(rt: &ReleaseType) -> Koller {
+    match rt {
         ReleaseType::Alpha   => Koller::red_bold(),
         ReleaseType::Beta    => Koller::yellow_bold(),
         ReleaseType::Release => Koller::green_bold(),
@@ -17,9 +24,9 @@ pub fn color_of_release_type(rt: &ReleaseType) -> Koller {
 }
 pub fn release_type_prefix(rt: &ReleaseType) -> &'static str {
     match rt {
-        ReleaseType::Alpha   => "ALPHA:   ",
-        ReleaseType::Beta    => "BETA:    ",
-        ReleaseType::Release => "RELEASE: ",
+        ReleaseType::Alpha   => "ALPHA:     ",
+        ReleaseType::Beta    => "BETA:      ",
+        ReleaseType::Release => "RELEASE:   ",
     }
 }
 pub fn release_type_str(rt: &ReleaseType) -> &'static str {

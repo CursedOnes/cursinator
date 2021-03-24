@@ -36,6 +36,11 @@ pub fn main(
     if let Some(version) = version {
         //TODO detect if version is a file id
         file = unwrap_match(find_to_install_version_by_key( &version, &versions,&repo.conf.game_version)).z;
+        if let Some(i) = addon.installed.as_ref() {
+            if file.id.0 < i.id.0 && !allow_downgrade {
+                hard_error!("Not downgrading");
+            }
+        }
     } else {
         if let UpdateOpt::Explicit = addon.update_opt {
             hard_error!("Addon update rule is set to explicit");

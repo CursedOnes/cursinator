@@ -30,7 +30,7 @@ pub fn print_addons_search(
                 None,
                 None,
                 term_w() as usize,
-                Koller::red_bold(),
+                Koller::red(),
             );
         }
     }
@@ -67,13 +67,13 @@ pub fn print_addon(
 
     let mut suffix1 = "".to_owned();
     if let Some(rt) = avail_rt {
-        let c = color_of_release_type(&rt);
+        let c = color_of_release_type_bold(&rt);
         suffix1 = format!(" {}{}{}{}{}",c.a,c.b,release_type_str(&rt),c.c,c.d);
     }
 
     let mut suffix2 = "".to_owned();
     if let Some(rt) = installed_rt {
-        let c = color_of_release_type(&rt);
+        let c = color_of_release_type_bold(&rt);
         suffix2 = format!(" @{}{}{}{}{}",c.a,c.b,release_type_str(&rt),c.c,c.d);
     }
 
@@ -85,9 +85,9 @@ pub fn print_addon(
     let mut summ = "".to_owned();
     if summary_width >= 12 {
         if summary_width < summary.len() {
-            summ = format!(" {}...",&summary[..summary_width-4]);
+            summ = format!(": {}...",&summary[..summary_width-4]);
         } else {
-            summ = format!(" {}",summary);
+            summ = format!(": {}",summary);
         }
     }
 
