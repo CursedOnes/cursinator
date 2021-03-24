@@ -96,14 +96,14 @@ pub fn release_type_from_flags(a: bool, b: bool, r: bool) -> Option<ReleaseType>
 }
 
 fn match_bool(s: &str, caption: &str) -> bool {
-    let to_match = vec![vec![
-        (false,"false".to_owned()),
-        (true,"true".to_owned()),
-        (false,"no".to_owned()),
-        (true,"yes".to_owned()),
-        (false,"0".to_owned()),
-        (true,"1".to_owned()),
-    ]];
+    let to_match = &[&[
+        (false,"false"),
+        (true,"true"),
+        (false,"no"),
+        (true,"yes"),
+        (false,"0"),
+        (true,"1"),
+    ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("{} must be true/false/yes/no/0/1",caption),

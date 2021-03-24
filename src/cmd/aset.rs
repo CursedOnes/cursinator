@@ -58,11 +58,11 @@ pub fn main(
 }
 
 fn match_key(s: &str) -> WhatASet {
-    let to_match = vec![vec![
-        (WhatASet::UpdateOpt,"update-opt".to_owned()),
-        (WhatASet::ManuallyInstalled,"manually-installed".to_owned()),
-        (WhatASet::VersionBlacklist,"version-blacklist".to_owned()),
-    ]];
+    let to_match = &[&[
+        (WhatASet::UpdateOpt,"update-opt"),
+        (WhatASet::ManuallyInstalled,"manually-installed"),
+        (WhatASet::VersionBlacklist,"version-blacklist"),
+    ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("Not match for setting"),
@@ -84,11 +84,11 @@ enum WhatASet {
 }
 
 fn match_updateopt(s: &str) -> UpdateOpt {
-    let to_match = vec![vec![
-        (UpdateOpt::All,"all".to_owned()),
-        (UpdateOpt::Explicit,"explicit".to_owned()),
-        (UpdateOpt::Implicit,"implicit".to_owned()),
-    ]];
+    let to_match = &[&[
+        (UpdateOpt::All,"all"),
+        (UpdateOpt::Explicit,"explicit"),
+        (UpdateOpt::Implicit,"implicit"),
+    ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("Not match for UpdateOpt"),
