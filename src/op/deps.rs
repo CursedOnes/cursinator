@@ -46,13 +46,10 @@ pub fn collect_deps(
             FilesResult::Error(e) => hard_error!("Failed to fetch dependency: {}",e),
         };
 
-        let mut dep_files: Vec<_> = dep_files.into_iter()
-            .filter(|f| game_version.matches(f.game_version.iter()) )
-            .collect();
-        let file_idx = z_channel.pick_version(&dep_files); //TODO do blacklist
-        let file_idx = unwrap_or_error!(file_idx,"H");
-
-        let dep_file = dep_files.swap_remove(file_idx);
+        let dep_file = unwrap_or_error!(
+            z_channel.pick_version_2(&dep_files,game_version),
+            "No version found to install"
+        ); //TODO do blacklist
 
         collect_deps(
             installed,
@@ -73,7 +70,7 @@ pub fn collect_deps(
             update_opt: z_update_opt,
             manually_installed: z_manually_installed,
             version_blacklist: z_version_blacklist,
-            installed: Some(dep_file),
+            installed: Some(dep_file.clone()),
         };
 
         install_queue.push(new_dep);

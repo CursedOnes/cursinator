@@ -17,6 +17,13 @@ pub fn color_of_release_type(rt: &ReleaseType) -> Koller {
 }
 pub fn release_type_prefix(rt: &ReleaseType) -> &'static str {
     match rt {
+        ReleaseType::Alpha   => "ALPHA:   ",
+        ReleaseType::Beta    => "BETA:    ",
+        ReleaseType::Release => "RELEASE: ",
+    }
+}
+pub fn release_type_str(rt: &ReleaseType) -> &'static str {
+    match rt {
         ReleaseType::Alpha   => "ALPHA  ",
         ReleaseType::Beta    => "BETA   ",
         ReleaseType::Release => "RELEASE",

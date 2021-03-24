@@ -75,18 +75,31 @@ pub fn install_mod(
     let mut modified = false;
 
     for i in install_queue {
-        eprintln!("Install {}{}",i.slug,o.suffix());
+        eprintln!("Install: {}{}",i.slug,o.suffix());
         if !o.noop {
-            let finalizer = i.installed.as_ref().unwrap().download(&repo.conf,api);
+            let finalizer = unwrap_result_error!(
+                i.installed.as_ref().unwrap().download(&repo.conf,api),
+                |e|"Failed to install addon: {}",e
+            );
             finalizer_queue.push(finalizer);
             repo.addons.insert(i.id,i);
             modified = true;
         }
     }
 
+    let mut was_installed = false;
+    if let Some(addon) = repo.addons.get(&addon_id) {
+        if addon.installed.is_some() {
+            was_installed = true;
+        }
+    }
+
     eprintln!("Install {}{}",i_slug,o.suffix());
     if !o.noop {
-        let finalizer = install.download(&repo.conf,api);
+        let finalizer = unwrap_result_error!(
+            install.download(&repo.conf,api),
+            |e|"Failed to install addon: {}",e
+        );
         finalizer_queue.push(finalizer);
     
         let new = LocalAddon {
@@ -105,17 +118,19 @@ pub fn install_mod(
         modified = true;
     }
 
-    if let Some(addon) = repo.addons.get_mut(&addon_id) {
-        if let Some(installed) = &mut addon.installed {
-            eprintln!("Uninstall previous version of {}{}",addon.slug,o.suffix());
+    if was_installed {
+        if let Some(addon) = repo.addons.get_mut(&addon_id) {
+            if let Some(installed) = &mut addon.installed {
+                eprintln!("Uninstall previous version of {}{}",addon.slug,o.suffix());
+                if !o.noop {
+                    unwrap_result_error!(installed.remove(),|e|"Failed to remove addon: {}",e);
+                    modified = true;
+                }
+            }
             if !o.noop {
-                unwrap_result_error!(installed.remove(),|e|"Failed to remove addon: {}",e);
+                addon.installed = None;
                 modified = true;
             }
-        }
-        if !o.noop {
-            addon.installed = None;
-            modified = true;
         }
     }
 

@@ -7,7 +7,7 @@ use super::dependency::Dependencies;
 use super::release_type::ReleaseType;
 
 #[derive(Deserialize,Serialize,Clone)]
-#[serde(rename_all(deserialize="camelCase"))]
+#[serde(rename_all="camelCase")]
 pub struct AddonFile {
     pub id: FileID,
     pub display_name: String,

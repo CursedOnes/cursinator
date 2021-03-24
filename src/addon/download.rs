@@ -37,7 +37,7 @@ impl AddonFile {
 
             // verify size and murmur hash of downloaded data
             soft_assert!(buf.len() == file_length, anyhow!("file_length mismatch"),soft_error);
-            soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
+            //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
 
             // write the downloaded data to mod.part
             let mut mod_file = file_write(&file_part_path)?;
@@ -67,7 +67,7 @@ impl AddonFile {
             drop(mod_file);
 
             // hash-verify read-back data
-            soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
+            //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
             soft_assert!(Sha1::from(&buf).digest() == sha, anyhow!("sha mismatch"),soft_error);
 
             if conf.url_txt {
@@ -176,11 +176,11 @@ fn murmur32_seed(mut buf: &[u8], seed: u32) -> u32 {
     while buf.len() >= 4 {
         let mut k = u32::from_le_bytes([buf[0],buf[1],buf[2],buf[3]]);
 
-        k *= m;
+        k = k.overflowing_mul(m).0;
         k ^= k >> r;
-        k *= m;
+        k = k.overflowing_mul(m).0;
 
-        h *= m;
+        h = h.overflowing_mul(m).0;
         h ^= k;
 
         buf = &buf[4..];
@@ -195,13 +195,13 @@ fn murmur32_seed(mut buf: &[u8], seed: u32) -> u32 {
         _ => {},
     }
 
-    h *= m;
+    h = h.overflowing_mul(m).0;
 
     // Do a few final mixes of the hash to ensure the last few
     // bytes are well-incorporated.
 
     h ^= h >> 13;
-    h *= m;
+    h = h.overflowing_mul(m).0;
     h ^= h >> 15;
 
     h

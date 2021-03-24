@@ -68,16 +68,19 @@ pub fn print_addon(
     let mut suffix1 = "".to_owned();
     if let Some(rt) = avail_rt {
         let c = color_of_release_type(&rt);
-        suffix1 = format!(" {}{}{}{}{}",c.a,c.b,release_type_prefix(&rt),c.c,c.d);
+        suffix1 = format!(" {}{}{}{}{}",c.a,c.b,release_type_str(&rt),c.c,c.d);
     }
 
     let mut suffix2 = "".to_owned();
     if let Some(rt) = installed_rt {
         let c = color_of_release_type(&rt);
-        suffix2 = format!(" @{}{}{}{}{}",c.a,c.b,release_type_prefix(&rt),c.c,c.d);
+        suffix2 = format!(" @{}{}{}{}{}",c.a,c.b,release_type_str(&rt),c.c,c.d);
     }
 
-    let summary_width = max_width - prefix.len() - suffix1.len() - suffix2.len();
+    let summary_width = max_width
+        .saturating_sub(prefix.len())
+        .saturating_sub(suffix1.len())
+        .saturating_sub(suffix2.len());
 
     let mut summ = "".to_owned();
     if summary_width >= 12 {

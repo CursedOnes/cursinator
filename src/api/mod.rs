@@ -48,7 +48,7 @@ impl API {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all(deserialize="camelCase"))]
+#[serde(rename_all="camelCase")]
 pub struct AddonInfo {
     pub id: AddonID,
     pub name: String,
@@ -58,7 +58,7 @@ pub struct AddonInfo {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all(deserialize="camelCase"))]
+#[serde(rename_all="camelCase")]
 pub struct GameVersionLatestFiles {
     pub game_version: FileGameVersion,
     pub project_file_id: FileID,

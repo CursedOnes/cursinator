@@ -58,6 +58,7 @@ impl ReleaseTypeMode {
     pub fn pick_version_2<'a>(&self, v: &'a [AddonFile], gv: &GameVersion) -> Option<&'a AddonFile> {
         fn find_legal<'a>(v: &'a [AddonFile], g: ReleaseType, gv: &GameVersion) -> Option<&'a AddonFile> {
             v.iter()
+                .rev()
                 .filter(|v| gv.matches(v.game_version.iter()) )
                 .find(|v| v.release_type >= g )
         }
@@ -76,10 +77,10 @@ impl ReleaseTypeMode {
 
         r
     }
-    pub fn pick_level(&self, v: impl Iterator<Item=ReleaseType>) -> ReleaseType {
+    pub fn pick_level(&self, v: impl Iterator<Item=ReleaseType>+DoubleEndedIterator) -> ReleaseType {
         let (mut a,mut b,mut r) = (false,false,false);
 
-        for v in v {
+        for v in v.rev() {
             match v {
                 ReleaseType::Release => r = true,
                 ReleaseType::Beta => b = true,

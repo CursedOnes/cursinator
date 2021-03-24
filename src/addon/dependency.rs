@@ -99,7 +99,7 @@ impl DerefMut for Dependencies {
 }
 
 #[derive(Deserialize,Serialize)]
-#[serde(rename_all(deserialize="camelCase"))]
+#[serde(rename_all="camelCase")]
 struct DepIntermediate {
     addon_id: AddonID,
     r#type: u64,

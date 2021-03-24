@@ -42,6 +42,7 @@ pub fn main(
             addon.installed.as_mut().unwrap().remove(),
             |e|"Failed to remove addon: {}",e
         );
+        addon.installed = None;
         return true;
     }
 
