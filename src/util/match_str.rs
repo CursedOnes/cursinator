@@ -74,10 +74,10 @@ pub fn match_str<'a,Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Mat
             if matches.len() > 1 {return Err(matches);}
         }
 
-        let s = s.replace(' ',"_").replace('-',"_");
+        let s = s.replace(' ',"_").replace('-',"_").replace(',',"_");
 
         for src in &mut srcs[..] {
-            for s in src.iter_mut() {s.1 = s.1.replace(' ',"_").replace('-',"_");}
+            for s in src.iter_mut() {s.1 = s.1.replace(' ',"_").replace('-',"_").replace(',',"_");}
 
             let mut matches = match_in(&s,src,&f);
             if matches.len() == 1 {return Ok(matches.swap_remove(0));}
