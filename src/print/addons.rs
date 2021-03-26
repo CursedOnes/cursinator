@@ -1,13 +1,13 @@
 use std::usize;
 
-use crate::addon::local::LocalAddons;
+use crate::addon::local::{LocalAddon, LocalAddons};
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonSlug, GameVersion};
 use crate::api::AddonInfo;
 use super::*;
 
-pub fn print_addons_search(
-    addons: &[AddonInfo],
+pub fn print_addons_search<'a>(
+    addons: impl Iterator<Item=&'a AddonInfo>,
     game_version: &GameVersion,
     installed: &LocalAddons,
 ){
@@ -37,10 +37,10 @@ pub fn print_addons_search(
     }
 }
 
-pub fn print_addons_local(
-    installed: &LocalAddons,
+pub fn print_addons_local<'a>(
+    installed: impl Iterator<Item=&'a LocalAddon>,
 ){
-    for addon in installed.values()  {
+    for addon in installed {
         if let Some(addon_file) = &addon.installed {
             print_addon(
                 &addon.slug,

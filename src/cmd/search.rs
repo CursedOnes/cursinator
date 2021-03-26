@@ -18,7 +18,7 @@ pub fn main(
     let page_n = page_n as u64 * page_size as u64;
 
     match api.search_key(&addon,page_size as u64,page_n) {
-        Ok(v) => print_addons_search(&v,&repo.conf.game_version,&repo.addons),
+        Ok(v) => print_addons_search(v.iter(),&repo.conf.game_version,&repo.addons),
         Err(e) => hard_error!("Addon Search failed: {}",e),
     }
     false

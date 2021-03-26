@@ -25,7 +25,7 @@ pub fn unwrap_addon_info(r: Result<AddonInfo,Vec<AddonInfo>>, game_version: &Gam
         Err(e) if e.is_empty() => hard_error!("Not match for addon"),
         Err(e) => {
             error!("Ambiguous matches for addon:");
-            print_addons_search(&e,game_version,installed);
+            print_addons_search(e.iter(),game_version,installed);
             error!("Ambiguous matches for addon");
             std::process::exit(1);
         }

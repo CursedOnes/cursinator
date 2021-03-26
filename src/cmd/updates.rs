@@ -1,3 +1,4 @@
+use crate::addon::local::LocalAddon;
 use crate::op::update::find_version_update;
 use crate::print::addons::print_addon;
 use crate::{Op, error, hard_error};
@@ -43,7 +44,9 @@ pub fn main(
             if show_all {16384} else {term_h().saturating_sub(4).max(16) as usize},
         );
     } else {
-        for a in repo.addons.values() {
+        let mut addons: Vec<&LocalAddon> = repo.addons.values().collect();
+        addons.sort_unstable_by_key(|a| &a.slug.0 );
+        for a in addons {
             let installed = match &a.installed {
                 Some(h) => h,
                 None => continue,
