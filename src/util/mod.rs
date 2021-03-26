@@ -1,24 +1,5 @@
-use std::ffi::{OsStr, OsString};
-use std::io::ErrorKind;
-use std::path::{Path, PathBuf};
-
-
 pub mod match_str;
-
-pub fn part_file_path(p: impl AsRef<OsStr>) -> PathBuf {
-    let mut s: OsString = p.as_ref().to_owned();
-    s.push(".part");
-    PathBuf::from(s)
-}
-
-
-pub fn remove_if(path: impl AsRef<Path>) -> std::io::Result<bool> {
-    match std::fs::remove_file(path) {
-        Ok(_) => Ok(true),
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(false),
-        Err(e) => Err(e)
-    }
-}
+pub mod fs;
 
 #[macro_export]
 macro_rules! hard_assert {

@@ -139,7 +139,9 @@ pub fn install_mod(
         modified = true;
     }
 
-    drop(finalizer_queue);
+    for f in finalizer_queue {
+        f.finalize();
+    }
 
     modified
 }

@@ -8,7 +8,7 @@ use serde_derive::*;
 
 use crate::addon::GameVersion;
 use crate::addon::local::LocalAddons;
-use crate::util::{part_file_path, remove_if};
+use crate::util::fs::{part_file_path, remove_if};
 use defaults::*;
 
 #[derive(Deserialize,Serialize)]

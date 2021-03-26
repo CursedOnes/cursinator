@@ -9,12 +9,13 @@ use std::io::BufRead;
 use crate::api::API;
 use crate::conf::Conf;
 use crate::*;
+use crate::util::fs::Finalize;
 
 use anyhow::anyhow;
 use chrono::NaiveDateTime;
 use filetime::{FileTime, set_file_times};
 use sha1::{Digest, Sha1};
-use util::remove_if;
+use util::fs::remove_if;
 
 use super::files::AddonFile;
 
@@ -97,7 +98,10 @@ impl AddonFile {
                 }
             }
 
-            return Ok(DownloadFinalize{file_path,file_part_path,url_txt_path,url_txt_part_path});
+            return Ok(DownloadFinalize{
+                file: Finalize::new(file_path,file_part_path,false),
+                url_txt: Finalize::new(url_txt_path,url_txt_part_path,!conf.url_txt),
+            });
         }
         Err(soft_error.unwrap())
     }
@@ -123,19 +127,14 @@ impl AddonFile {
 
 #[must_use]
 pub struct DownloadFinalize {
-    file_path: PathBuf,
-    file_part_path: PathBuf,
-    url_txt_path: PathBuf,
-    url_txt_part_path: PathBuf,
+    file: Finalize,
+    url_txt: Finalize,
 }
 
-impl Drop for DownloadFinalize {
-    fn drop(&mut self) {
-        // move .part to final files
-        log_error!(remove_if(&self.file_path));
-        log_error!(std::fs::rename(&self.file_part_path, &self.file_path));
-        log_error!(remove_if(&self.url_txt_path));
-        log_error!(std::fs::rename(&self.url_txt_part_path, &self.url_txt_path));
+impl DownloadFinalize {
+    pub fn finalize(self) {
+        self.file.finalize();
+        self.url_txt.finalize();
     }
 }
 
