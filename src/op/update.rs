@@ -9,10 +9,10 @@ pub fn find_version_update<'a>(
     release_type: ReleaseTypeMode,
     allow_downgrade: bool,
 ) -> Option<&'a AddonFile> {
-    let mut current_idx = 0; // excludes current version
+    let mut current_idx = 0; // includes current version
     if let Some(installed) = installed {
         for v in versions {
-            if v.id.0 <= installed.0 {
+            if v.id.0 < installed.0 {
                 current_idx += 1;
             } else {
                 break
