@@ -1,5 +1,3 @@
-use termion::color;
-
 use crate::addon::release_type::ReleaseType;
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::{Op, OpCmd, error, hard_error, log_error};

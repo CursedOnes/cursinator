@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::fmt::Display;
 use std::ops::BitOr;
 use serde_derive::*;
@@ -34,28 +33,7 @@ impl ReleaseTypeMode {
             ReleaseType::Alpha   => self.alpha,
         }
     }
-    pub fn pick_version(&self, v: &[impl Borrow<ReleaseType>]) -> Option<usize> {
-        fn find_legal(v: &[impl Borrow<ReleaseType>], g: ReleaseType) -> Option<usize> {
-            v.iter().enumerate()
-                .find(|(_,v)| *(*v).borrow() >= g )
-                .map(|(i,_)| i )
-        }
-
-        let mut r = None;
-
-        if r.is_none() && self.release {
-            r = find_legal(v, ReleaseType::Release);
-        }
-        if r.is_none() && self.beta {
-            r = find_legal(v, ReleaseType::Beta);
-        }
-        if r.is_none() && self.alpha {
-            r = find_legal(v, ReleaseType::Alpha);
-        }
-
-        r
-    }
-    pub fn pick_version_2<'a>(&self, v: &'a [AddonFile], gv: &GameVersion) -> Option<&'a AddonFile> {
+    pub fn pick_version<'a>(&self, v: &'a [AddonFile], gv: &GameVersion) -> Option<&'a AddonFile> {
         fn find_legal<'a>(v: &'a [AddonFile], g: ReleaseType, gv: &GameVersion) -> Option<&'a AddonFile> {
             v.iter()
                 .rev()

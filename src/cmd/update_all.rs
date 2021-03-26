@@ -1,9 +1,5 @@
-use std::collections::VecDeque;
-
 use crate::Op;
-use crate::addon::files::AddonFile;
-use crate::addon::local::{LocalAddon, UpdateOpt};
-use crate::addon::release_type::ReleaseType;
+use crate::addon::local::UpdateOpt;
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::api::files::FilesResult;

@@ -28,6 +28,6 @@ pub fn find_version_update<'a>(
         current_idx..versions.len()
     };
 
-    release_type.pick_version_2(&versions[visible_range], game_version)
+    release_type.pick_version(&versions[visible_range], game_version)
         .filter(|f| installed.is_none() || f.id != installed.unwrap() )
 }
