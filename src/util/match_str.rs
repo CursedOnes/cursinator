@@ -64,7 +64,7 @@ pub fn match_str<'a,Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Mat
             if matches.len() > 1 {return Err(matches);}
         }
 
-        let s = s.to_ascii_lowercase();
+        let mut s = s.to_ascii_lowercase();
 
         for src in &mut srcs[..] {
             for s in src.iter_mut() {s.1.make_ascii_lowercase();}
@@ -74,20 +74,30 @@ pub fn match_str<'a,Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Mat
             if matches.len() > 1 {return Err(matches);}
         }
 
-        let s = s.replace(' ',"_").replace('-',"_").replace(',',"_");
+        string_remove_1(&mut s);
 
         for src in &mut srcs[..] {
-            for s in src.iter_mut() {s.1 = s.1.replace(' ',"_").replace('-',"_").replace(',',"_");}
+            for s in src.iter_mut() {string_remove_1(&mut s.1);}
 
             let mut matches = match_in(&s,src,&f);
             if matches.len() == 1 {return Ok(matches.swap_remove(0));}
             if matches.len() > 1 {return Err(matches);}
         }
 
-        let s = s.replace('_',"");
+        string_remove_2(&mut s);
 
         for src in &mut srcs[..] {
-            for s in src.iter_mut() {s.1 = s.1.replace('_',"");}
+            for s in src.iter_mut() {string_remove_2(&mut s.1);}
+
+            let mut matches = match_in(&s,src,&f);
+            if matches.len() == 1 {return Ok(matches.swap_remove(0));}
+            if matches.len() > 1 {return Err(matches);}
+        }
+
+        string_remove_3(&mut s);
+
+        for src in &mut srcs[..] {
+            for s in src.iter_mut() {string_remove_3(&mut s.1);}
 
             let mut matches = match_in(&s,src,&f);
             if matches.len() == 1 {return Ok(matches.swap_remove(0));}
@@ -128,6 +138,31 @@ fn cut_after_slash(s: &str) -> &str {
     }else{
         &s[..]
     }
+}
+
+fn string_remove_1(s: &mut String) {
+    unsafe{
+        s.as_mut_vec()
+            .retain(u8::is_ascii);
+    }
+    debug_assert!(std::str::from_utf8(s.as_bytes()).is_ok());
+}
+
+fn string_remove_2(s: &mut String) {
+    for b in unsafe{s.as_bytes_mut()} {
+        if *b == ' ' as u8 || *b == '-' as u8 || *b == ',' as u8 {
+            *b = '_' as u8;
+        }
+    }
+    debug_assert!(std::str::from_utf8(s.as_bytes()).is_ok());
+}
+
+fn string_remove_3(s: &mut String) {
+    unsafe{
+        s.as_mut_vec()
+            .retain(|b| *b != '_' as u8);
+    }
+    debug_assert!(std::str::from_utf8(s.as_bytes()).is_ok());
 }
 
 #[derive(Clone)]
