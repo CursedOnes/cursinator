@@ -20,6 +20,7 @@ pub fn main(
     force: bool,
     slug: String,
     version: Option<String>,
+    version_blacklist: Option<String>,
 ) -> bool {
     // 1. get addon id
     let slug = AddonSlug(slug);
@@ -51,6 +52,7 @@ pub fn main(
             &versions,
             None,
             &repo.conf.game_version,
+            version_blacklist.as_deref(),
             channel,
             true,
         );

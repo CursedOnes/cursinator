@@ -90,3 +90,19 @@ impl<'de> Deserialize<'de> for LocalAddons {
         deserializer.deserialize_seq(LAVisitor)
     }
 }
+
+impl AddonFile {
+    pub fn not_in_blacklist(&self, b: Option<&str>) -> bool {
+        if let Some(b) = b { //TODO proper regex
+            let b = b.trim().to_lowercase();
+            for g in &self.game_version {
+                if g.0.trim().to_lowercase().find(&b).is_some() {
+                    return false;
+                }
+            }
+            !self.file_name.trim().to_lowercase().find(&b).is_some()
+        } else {
+            true
+        }
+    }
+}

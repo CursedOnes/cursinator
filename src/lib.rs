@@ -55,6 +55,8 @@ pub enum OpCmd {
         release: bool,
         #[structopt(short="f",long,help="Install even if incompatibility occurs")]
         force: bool,
+        #[structopt(short="x",long="version-blacklist",help="version blacklist")]
+        version_blacklist: Option<String>,
         #[structopt(help="slug")]
         slug: String,
         #[structopt(help="version")]

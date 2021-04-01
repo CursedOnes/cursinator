@@ -40,6 +40,7 @@ pub fn main(
             Some(addon.installed.as_ref().unwrap()),
             rt.unwrap_or(addon.channel),
             &repo.conf.game_version,
+            addon.version_blacklist.as_deref(),
             list_older,
             if show_all {16384} else {term_h().saturating_sub(4).max(16) as usize},
         );
@@ -66,6 +67,7 @@ pub fn main(
                 &versions,
                 Some(installed.id),
                 &repo.conf.game_version,
+                a.version_blacklist.as_deref(),
                 a.channel,
                 list_older,
             );

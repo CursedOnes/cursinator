@@ -6,6 +6,7 @@ pub fn find_version_update<'a>(
     versions: &'a [AddonFile],
     installed: Option<FileID>,
     game_version: &GameVersion,
+    blacklist: Option<&str>,
     release_type: ReleaseTypeMode,
     allow_downgrade: bool,
 ) -> Option<&'a AddonFile> {
@@ -28,6 +29,6 @@ pub fn find_version_update<'a>(
         current_idx..versions.len()
     };
 
-    release_type.pick_version(&versions[visible_range], game_version)
+    release_type.pick_version(&versions[visible_range], game_version, blacklist)
         .filter(|f| installed.is_none() || f.id != installed.unwrap() )
 }

@@ -39,7 +39,11 @@ pub fn main(
             },
             WhatASet::VersionBlacklist => if let Some(value) = value {
                 if o.noop {return false;}
-                addon.version_blacklist = Some(value.to_owned()); //TODO set none
+                if value == "-" {
+                    addon.version_blacklist = None;
+                } else {
+                    addon.version_blacklist = Some(value.to_owned());
+                }
                 true
             } else {
                 eprintln!("\tversion-blacklist={}",addon.version_blacklist.as_ref().map(|s| s as &str).unwrap_or(""));

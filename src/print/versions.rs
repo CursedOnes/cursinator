@@ -10,6 +10,7 @@ pub fn print_versions(
     release_type: ReleaseTypeMode,
     //current_slug: &AddonSlug,
     game_version: &GameVersion,
+    blacklist: Option<&str>,
     print_older: bool,
     max_h: usize,
 ){
@@ -44,6 +45,7 @@ pub fn print_versions(
         current,
         true,
         game_version,
+        blacklist,
         versions[visible_range.clone()].iter().rev().map(AsAddonFile::file)
     );
     if visible_range.start != 0 {
@@ -59,6 +61,7 @@ pub fn print_versions(
             current,
             false,
             game_version,
+            blacklist,
             versions[visible_range.clone()].iter().rev().map(AsAddonFile::file)
         );
         if visible_range.start != 0 {
@@ -98,10 +101,11 @@ fn push_visible<'a>(
     current: Option<&AddonFile>,
     push_all: bool,
     game_version: &GameVersion,
+    blacklist: Option<&str>,
     versions: impl Iterator<Item=&'a AddonFile>,
 ){
     for f in versions {
-        if game_version.matches(f.game_version.iter()) {
+        if game_version.matches(f.game_version.iter()) && f.not_in_blacklist(blacklist) {
             if f.release_type >= initial || push_all {
                 initial = f.release_type;
                 dest.push(Some(f));

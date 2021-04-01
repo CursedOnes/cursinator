@@ -52,7 +52,11 @@ pub fn collect_deps(
         }
 
         let dep_file = unwrap_or_error!(
-            z_channel.pick_version(&dep_files,game_version),
+            z_channel.pick_version(
+                &dep_files,
+                game_version,
+                z_version_blacklist.as_deref(),
+            ),
             "No version found to install"
         ); //TODO do blacklist
 

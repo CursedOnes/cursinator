@@ -33,24 +33,25 @@ impl ReleaseTypeMode {
             ReleaseType::Alpha   => self.alpha,
         }
     }
-    pub fn pick_version<'a>(&self, v: &'a [AddonFile], gv: &GameVersion) -> Option<&'a AddonFile> {
-        fn find_legal<'a>(v: &'a [AddonFile], g: ReleaseType, gv: &GameVersion) -> Option<&'a AddonFile> {
+    pub fn pick_version<'a>(&self, v: &'a [AddonFile], gv: &GameVersion, blacklist: Option<&str>) -> Option<&'a AddonFile> {
+        fn find_legal<'a>(v: &'a [AddonFile], g: ReleaseType, gv: &GameVersion, blacklist: Option<&str>) -> Option<&'a AddonFile> {
             v.iter()
                 .rev()
                 .filter(|v| gv.matches(v.game_version.iter()) )
+                .filter(|v| v.not_in_blacklist(blacklist) )
                 .find(|v| v.release_type >= g )
         }
 
         let mut r = None;
 
         if r.is_none() && self.release {
-            r = find_legal(v, ReleaseType::Release, gv);
+            r = find_legal(v, ReleaseType::Release, gv, blacklist);
         }
         if r.is_none() && self.beta {
-            r = find_legal(v, ReleaseType::Beta, gv);
+            r = find_legal(v, ReleaseType::Beta, gv, blacklist);
         }
         if r.is_none() && self.alpha {
-            r = find_legal(v, ReleaseType::Alpha, gv);
+            r = find_legal(v, ReleaseType::Alpha, gv, blacklist);
         }
 
         r

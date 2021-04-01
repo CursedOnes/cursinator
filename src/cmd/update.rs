@@ -54,6 +54,7 @@ pub fn main(
             &versions,
             Some(addon.installed.as_ref().unwrap().id),
             &repo.conf.game_version,
+            addon.version_blacklist.as_deref(),
             channel,
             allow_downgrade,
         );
