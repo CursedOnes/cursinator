@@ -16,7 +16,7 @@ use structopt::*;
 #[derive(StructOpt)]
 #[structopt(name = "cursinator", about = "Download and manage CurseForge addons")]
 pub struct Op {
-    #[structopt(short,long,default_value="repo.json",help="path to repo json")]
+    #[structopt(short,long,default_value="repo.json",help="Path to repo json")]
     pub conf: PathBuf,
     #[structopt(short,long,help="spam stderr")]
     pub verbose: bool,
@@ -57,7 +57,7 @@ pub enum OpCmd {
         force: bool,
         #[structopt(short="x",long="version-blacklist",help="version blacklist")]
         version_blacklist: Option<String>,
-        #[structopt(help="addon slug or id")]
+        #[structopt(help="Addon slug or id")]
         slug: String,
         #[structopt(help="version")]
         file: Option<String>,

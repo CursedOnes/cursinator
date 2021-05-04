@@ -153,10 +153,12 @@ fn file_read(p: impl AsRef<Path>) -> std::io::Result<File> {
         .open(p)
 }
 
+//TODO fix murmur32
 fn murmur32(buf: &[u8]) -> u32 {
     murmur32_seed(buf,0)
 }
 
+//BROKEN
 fn murmur32_seed(mut buf: &[u8], seed: u32) -> u32 {
     // stolen from smhasher: https://github.com/aappleby/smhasher/blob/61a0530f28277f2e850bfc39600ce61d02b518de/src/MurmurHash2.cpp#L37
 
@@ -277,7 +279,7 @@ macro_rules! try_from {
 }
 
 #[test]
-fn dastgerherg() {
+fn parse_date() {
     NaiveDateTime::parse_from_str("2021-02-13T20:36:05.29Z","%Y-%m-%dT%H:%M:%S.%fZ").unwrap();
 }
 
