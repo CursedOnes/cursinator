@@ -149,7 +149,7 @@ pub enum OpCmd {
         #[structopt(help="addon")]
         addon: String,
     },
-    #[structopt(about="Addon setting")]
+    #[structopt(about="Addon setting. Not all options exposed yet, refer repo.json")]
     Aset{ //TODO move update_opt to separae option
         #[structopt(help="addon")]
         addon: String,
@@ -158,7 +158,7 @@ pub enum OpCmd {
         #[structopt(help="Set setting, else show setting")]
         value: Option<String>,
     },
-    #[structopt(about="Repo setting")]
+    #[structopt(about="Repo setting. Not all options exposed yet, refer repo.json")]
     Rset{
         #[structopt(help="Show/Set specific setting, else list settings")]
         key: Option<String>,

@@ -1,8 +1,8 @@
-pub fn default_headers() -> Vec<(String,String)> {
+pub fn default_api_headers() -> Vec<(String,String)> {
     vec![]
 }
-pub fn default_domain() -> String {
-    "https://addons-ecs.forgesvc.net".to_owned()
+pub fn default_api_domain() -> String {
+    "https://addons-ecs.forgesvc.net/api/v2".to_owned()
 }
 pub fn default_url_txt() -> bool {
     true

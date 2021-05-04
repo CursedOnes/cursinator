@@ -35,8 +35,8 @@ pub fn main(o: Op) {
     };
 
     let api = API {
-        domain: repo.conf.domain.clone(),
-        headers: repo.conf.headers.clone(),
+        domain: repo.conf.api_domain.clone(),
+        headers: repo.conf.api_headers.clone(),
         offline: o.offline,
     };
 

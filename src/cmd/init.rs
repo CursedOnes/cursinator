@@ -19,8 +19,8 @@ pub fn init(
             url_txt: default_url_txt(),
             addon_mtime: default_addon_mtime(),
             soft_retries: default_soft_retries(),
-            headers: default_headers(),
-            domain: default_domain(),
+            api_headers: default_api_headers(),
+            api_domain: default_api_domain(),
         },
         addons: LocalAddons(Default::default()),
     };

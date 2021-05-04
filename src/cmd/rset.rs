@@ -39,7 +39,7 @@ pub fn main(
         }
     }else{
         eprintln!(
-            "\turl-txt={}\n\taddon-mtime={}\n\tsoft-retries={}",
+            "\turl-txt={}\n\taddon-mtime={}\n\tsoft-retries={}\n\nNot all options exposed yet, refer repo.json",
             repo.conf.url_txt,
             repo.conf.addon_mtime,
             repo.conf.soft_retries,

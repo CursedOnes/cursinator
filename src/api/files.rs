@@ -5,7 +5,7 @@ use super::*;
 
 impl API {
     pub fn files(&self, id: AddonID) -> FilesResult {
-        let url = format!("{domain}/api/v2/addon/{id}/files",id=id.0,domain=self.domain);
+        let url = format!("{domain}/addon/{id}/files",id=id.0,domain=self.domain);
         let resp =
         match self.http_get(&url) {
             Ok(s) => s,

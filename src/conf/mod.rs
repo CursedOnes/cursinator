@@ -26,10 +26,10 @@ pub struct Conf {
     pub addon_mtime: bool,
     #[serde(default="default_soft_retries")]
     pub soft_retries: usize,
-    #[serde(default="default_headers")]
-    pub headers: Vec<(String,String)>,
-    #[serde(default="default_domain")]
-    pub domain: String,
+    #[serde(default="default_api_headers")]
+    pub api_headers: Vec<(String,String)>,
+    #[serde(default="default_api_domain")]
+    pub api_domain: String,
 }
 
 impl Repo {

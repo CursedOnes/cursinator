@@ -1,6 +1,6 @@
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
-use crate::conf::defaults::{default_domain, default_headers};
+use crate::conf::defaults::{default_api_domain, default_api_headers};
 use crate::{dark_log, hard_error, warn};
 
 pub mod search;
@@ -30,15 +30,15 @@ impl API {
     #[allow(dead_code)]
     fn test_api() -> Self {
         Self {
-            domain: default_domain(),
-            headers: default_headers(),
+            domain: default_api_domain(),
+            headers: default_api_headers(),
             offline: false,
         }
     }
 
     pub fn addon_info(&self, id: AddonID) -> anyhow::Result<Option<AddonInfo>> {
         if self.offline {hard_error!("Offline mode")};
-        let url = format!("{domain}/api/v2/addon/{id}",id=id.0,domain=self.domain);
+        let url = format!("{domain}/addon/{id}",id=id.0,domain=self.domain);
         match self.http_get(&url) {
             Ok(s) => Ok(Some( s.into_json::<AddonInfo>()? )),
             Err(ureq::Error::Status(404,_)) => Ok(None),

@@ -7,7 +7,7 @@ impl API {
         anyhow::ensure!(key.len() != 0, "to-search key cannot be empty");
         if self.offline {hard_error!("Offline mode")};
         let url = format!(
-            "{domain}/api/v2/addon/search?gameId=432&index={off}&pageSize={page_size}&sectionId=6&searchFilter={key}",
+            "{domain}/addon/search?gameId=432&index={off}&pageSize={page_size}&sectionId=6&searchFilter={key}",
             off=off,
             page_size=page_size,
             key=key,

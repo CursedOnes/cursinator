@@ -52,7 +52,7 @@ pub fn main(
         }
     }else{
         eprintln!(
-            "\tupdate-opt={}\n\tmanually-installed={}\n\tversion-blacklist={}",
+            "\tupdate-opt={}\n\tmanually-installed={}\n\tversion-blacklist={}\n\nNot all options exposed yet, refer repo.json",
             addon.update_opt,
             addon.manually_installed,
             addon.version_blacklist.as_ref().map(|s| s as &str).unwrap_or(""),
