@@ -57,7 +57,7 @@ pub enum OpCmd {
         force: bool,
         #[structopt(short="x",long="version-blacklist",help="version blacklist")]
         version_blacklist: Option<String>,
-        #[structopt(help="slug")]
+        #[structopt(help="addon slug or id")]
         slug: String,
         #[structopt(help="version")]
         file: Option<String>,

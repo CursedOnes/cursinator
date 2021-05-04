@@ -1,7 +1,7 @@
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
 use crate::conf::defaults::{default_domain, default_headers};
-use crate::{dark_log, hard_error};
+use crate::{dark_log, hard_error, warn};
 
 pub mod search;
 pub mod files;
@@ -44,6 +44,17 @@ impl API {
             Err(ureq::Error::Status(404,_)) => Ok(None),
             Err(e) => Err(e.into()),
         }
+    }
+
+    pub fn addon_by_id_or_slug(&self, id: &AddonSlug) ->  anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
+        if let Ok(i) = id.0.trim().parse::<u64>() {
+            match self.addon_info(AddonID(i)) {
+                Ok(Some(info)) => return Ok(Ok(info)),
+                Ok(None) => {},
+                Err(e) => warn!("{}",e),
+            }
+        }
+        self.search_slug(id)
     }
 }
 

@@ -26,7 +26,7 @@ pub fn main(
     let slug = AddonSlug(slug);
 
     let addon_info = //TODO detect if slug is a addon id
-        match api.search_slug(&slug) {
+        match api.addon_by_id_or_slug(&slug) {
             Ok(r) => unwrap_addon_info(r,&repo.conf.game_version,&repo.addons),
             Err(e) => hard_error!("Failed to find addon: {}",e),
         };
