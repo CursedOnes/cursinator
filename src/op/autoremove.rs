@@ -4,18 +4,20 @@ use crate::addon::AddonID;
 use crate::addon::local::LocalAddons;
 
 pub fn autoremovable(addons: &LocalAddons) -> Vec<AddonID> {
-    let mut has_depedents = FxHashSet::default();
+    // collect addons which have dependents (are dep in other addons)
+    let mut has_dependents = FxHashSet::default();
     for addon in addons.values() {
         if let Some(file) = &addon.installed {
             for deps in file.dependencies.iter_required() {
-                has_depedents.insert(deps);
+                has_dependents.insert(deps);
             }
         }
     }
 
-    let mut dest = Vec::with_capacity(addons.len()-has_depedents.len());
+    // collect auto-installed addons without dependents
+    let mut dest = Vec::with_capacity(addons.len()-has_dependents.len());
     for addon in addons.values() {
-        if addon.installed.is_some() && !addon.manually_installed && !has_depedents.contains(&addon.id) {
+        if addon.installed.is_some() && !addon.manually_installed && !has_dependents.contains(&addon.id) {
             dest.push(addon.id);
         }
     }

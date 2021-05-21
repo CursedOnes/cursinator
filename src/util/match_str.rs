@@ -1,7 +1,5 @@
 use std::ops::Range;
 
-use termion::style;
-
 use crate::addon::{AddonID, GameVersion};
 use crate::addon::files::AddonFile;
 use crate::addon::local::LocalAddons;

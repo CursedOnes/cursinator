@@ -36,6 +36,6 @@ fn test_fetch_files() {
             assert_eq!(v[307].id.0, 3238200);
         },
         FilesResult::NotFound => panic!("no results"),
-        FilesResult::Error(e) => panic!(e),
+        FilesResult::Error(e) => panic!("{}",e),
     }
 }
