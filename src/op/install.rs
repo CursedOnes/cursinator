@@ -80,6 +80,14 @@ pub fn install_mod(
             i.installed.as_ref().unwrap().file_name,
             o.suffix()
         );
+
+        if i.installed.as_ref().unwrap().has_install_script {
+            warn!(
+                "Installing {}: Install Scripts are currently unsupported", 
+                i.slug
+            );
+        }
+
         if !o.noop {
             let finalizer = unwrap_result_error!(
                 i.installed.as_ref().unwrap().download(&repo.conf,api),
