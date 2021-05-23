@@ -6,7 +6,7 @@ use crate::hard_error;
 use crate::api::files::FilesResult;
 use crate::util::match_str::*;
 use crate::print::error::unwrap_match;
-use crate::op::update::find_version_update;
+use crate::op::update::{find_version_update, fix_discrepancy};
 use crate::op::install::install_mod;
 use crate::addon::local::UpdateOpt;
 
@@ -24,11 +24,13 @@ pub fn main(
 
     let addon = &repo.addons.get(&addon_id).unwrap();
 
-    let versions = match api.files(addon_id) {
+    let mut versions = match api.files(addon_id) {
         FilesResult::Ok(f) => f,
         FilesResult::NotFound => hard_error!("No online information for installed addon"),
         FilesResult::Error(e) => hard_error!("Failed to fetch online information: {}",e),
     };
+
+    fix_discrepancy(&mut versions, addon.installed.as_ref().unwrap());
 
     if versions.iter().find(|v| repo.conf.game_version.matches(v.game_version.iter()) ).is_none() {
         hard_error!("No version for current game version");
