@@ -4,7 +4,7 @@ CLI tool for Installing/Download and managing addons/mods from CurseForge.
 
 Useful for e.g. building modpacks for alternative launchers like SKCraft Launcher, or just installing some mods.
 
-State: WIP, all features mentioned in the example do work. Few side functions and doc to be improved.
+State: WIP, all features mentioned in the README do work. Few side functions and doc to be improved.
 
 # Features
 
@@ -83,5 +83,5 @@ Write repo json
 # TODO
 
 - [ ] Improve CLI help  
-- [ ] Support addons other than Minecraft Mods  
+- [ ] Support search for addons other than Minecraft Mods  
 - [ ] Improved regex for e.g. game version filter  
