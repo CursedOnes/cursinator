@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::Op;
 use crate::addon::local::UpdateOpt;
 use crate::addon::rtm::ReleaseTypeMode;
@@ -14,6 +16,9 @@ pub fn main(
     repo: &mut Repo,
     rt: Option<ReleaseTypeMode>,
 ) -> bool {
+
+    let mut cache = HashMap::with_capacity_and_hasher(256,Default::default());
+
     let mut modified = false;
 
     loop {
@@ -32,7 +37,7 @@ pub fn main(
                 None => continue,
             };
 
-            let mut versions = match api.files(addon.id) {
+            let mut versions = match api.files_cached(addon.id,&mut cache) {
                 FilesResult::Ok(f) => f,
                 FilesResult::NotFound => {error!("No online information for installed addon");continue},
                 FilesResult::Error(e) => {error!("Failed to fetch online information: {}",e);continue},
