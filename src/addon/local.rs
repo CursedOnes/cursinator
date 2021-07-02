@@ -56,7 +56,10 @@ impl Serialize for LocalAddons {
     where
         S: serde::Serializer {
         
-        serializer.collect_seq(self.values())
+        let mut v: Vec<&LocalAddon> = self.values().collect();
+        v.sort_unstable_by_key(|v| &v.slug.0 );
+        
+        serializer.collect_seq(v)
     }
 }
 impl<'de> Deserialize<'de> for LocalAddons {

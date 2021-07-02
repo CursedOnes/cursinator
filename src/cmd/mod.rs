@@ -77,6 +77,7 @@ pub fn main(o: Op) {
 
     if modified {
         dark_log!("Write repo json");
+        repo.sort_deps();
         log_error!(repo.save(&o.conf),|e|"Failed to write repo json: {}",e);
     }
 }

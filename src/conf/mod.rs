@@ -59,6 +59,13 @@ impl Repo {
         serde_json::to_writer_pretty(f, self)?;
         Ok(())
     }
+    pub fn sort_deps(&mut self) {
+        for a in self.addons.values_mut() {
+            if let Some(file) = &mut a.installed {
+                file.sort_deps();
+            }
+        }
+    }
 }
 
 fn file_write(p: impl AsRef<Path>) -> std::io::Result<File> {

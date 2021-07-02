@@ -43,6 +43,12 @@ fn assert_omemsize(a: Option<AddonFile>) -> [u8;176] {
     }
 }
 
+impl AddonFile {
+    pub fn sort_deps(&mut self) {
+        self.dependencies.sort_unstable_by_key(|v| (v.idx(),v.id().0) )
+    }
+}
+
 impl Borrow<ReleaseType> for AddonFile {
     fn borrow(&self) -> &ReleaseType {
         &self.release_type
