@@ -7,9 +7,9 @@ impl API {
         anyhow::ensure!(key.len() != 0, "to-search key cannot be empty");
         if self.offline {hard_error!("Offline mode")};
         let url = format!(
-            "{domain}/addon/search?gameId=432&index={off}&pageSize={page_size}&sectionId=6&searchFilter={key}",
+            "{domain}/addon/search?gameId=432&index={off}&sectionId=6&searchFilter={key}",
             off=off,
-            page_size=page_size,
+            //page_size=page_size,
             key=key,
             domain=self.domain,
         );
@@ -19,18 +19,19 @@ impl API {
     }
     pub fn search_slug(&self, slug: &AddonSlug) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
         anyhow::ensure!(slug.0.len() != 0, "to-search slug cannot be empty");
-        match self._search_slug(slug,0,64) {
+        match self._search_slug(slug,0,50) {
             Ok(Err(e)) => {
-                if e.len() < 64 {return Ok(Err(e));}
-                let mut i = 0;
+                if e.len() < 50 {return Ok(Err(e));}
+                let mut i = 50;
                 loop{
-                    match self._search_slug(slug,i,10000) {
+                    if i >= 200 {return Ok(Err(e));}
+                    match self._search_slug(slug,i,50) {
                         Ok(Ok(v)) => return Ok(Ok(v)),
-                        Ok(Err(v)) if v.is_empty() || v.len() < 5000 => return Ok(Err(e)),
+                        Ok(Err(v)) if v.is_empty() || v.len() < 50 => return Ok(Err(e)),
                         Ok(Err(_)) => {},
                         Err(e) => return Err(e),
                     }
-                    i += 5000;
+                    i += 50;
                 }
             }
             v => v,
