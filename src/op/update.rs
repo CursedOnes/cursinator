@@ -48,6 +48,13 @@ pub fn fix_discrepancy(
                 installed.file_name,
             );
         }
+
+        if installed.dependencies.new_required(&remote.dependencies) {
+            warn!(
+                "{}: Discrepancy in Required Dependencies: Perhaps the Addon needs to be updated or reinstalled",
+                installed.file_name,
+            );
+        }
     } else {
         warn!(
             "{}: Currently installed version not available online",

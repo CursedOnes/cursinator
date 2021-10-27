@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use super::*;
 
-#[derive(Clone)]
+#[derive(Clone,PartialEq)]
 pub enum Dependency {
     EmbeddedLibrary(AddonID),
     Optional(AddonID),
@@ -82,6 +82,15 @@ impl Dependencies {
         self.iter()
             .filter(|d| matches!(d,Dependency::Include(_)) )
             .map(|d| d.id() )
+    }
+
+    pub fn new_required(&self, new: &Dependencies) -> bool {
+        for r in new.iter_required() {
+            if !self.0.contains(&Dependency::Required(r)) {
+                return true;
+            }
+        }
+        false
     }
 }
 
