@@ -58,9 +58,9 @@ pub fn fix_discrepancy(
         // find the next slot after the last with smaller id
         let slot = versions.iter()
             .enumerate()
-            .filter(|(_,v)| v.id.0 < installed.id.0 )
-            .last()
-            .map(|(i,_)| i+1 )
+            .filter(|(_,v)| v.id.0 > installed.id.0 )
+            .next()
+            .map(|(i,_)| i )
             .unwrap_or(versions.len());
 
         versions.insert(slot, installed.clone());
