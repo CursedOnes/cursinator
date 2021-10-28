@@ -7,9 +7,11 @@ pub mod search;
 pub mod files;
 
 use serde_derive::*;
+use ureq::Agent;
 
 pub struct API {
     pub domain: String,
+    pub agent: Agent,
     pub headers: Vec<(String,String)>,
     pub offline: bool,
 }
@@ -18,7 +20,7 @@ impl API {
     pub fn http_get(&self, url: &str) -> Result<ureq::Response,ureq::Error> {
         if self.offline {hard_error!("Offline mode")};
         dark_log!("API: {}",url);
-        let mut req = ureq::get(url);
+        let mut req = self.agent.get(url);
         for (h,v) in &self.headers {
             req = req.set(h,v);
         };
@@ -30,6 +32,7 @@ impl API {
     #[allow(dead_code)]
     fn test_api() -> Self {
         Self {
+            agent: Agent::new(),
             domain: default_api_domain(),
             headers: default_api_headers(),
             offline: false,
