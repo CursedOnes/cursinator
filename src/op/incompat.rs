@@ -10,8 +10,8 @@ pub fn check_incompatibility_3<'a>(ours: &'a [LocalAddon], addons: &'a LocalAddo
                 if let Some(file) = &addon.installed {
                     if let Some(other_file) = &other_addon.installed {
                         if 
-                            file.dependencies.iter_incompatible().find(|i| *i == other_addon.id ).is_some() ||
-                            other_file.dependencies.iter_incompatible().find(|i| *i == addon.id ).is_some()
+                            file.dependencies.iter_incompatible().any(|i| i == other_addon.id ) ||
+                            other_file.dependencies.iter_incompatible().any(|i| i == addon.id )
                         {
                             dest.insert(Incompat{from:addon,to:other_addon});
                         }
@@ -24,8 +24,8 @@ pub fn check_incompatibility_3<'a>(ours: &'a [LocalAddon], addons: &'a LocalAddo
                 if let Some(file) = &addon.installed {
                     if let Some(other_file) = &other_addon.installed {
                         if 
-                            file.dependencies.iter_incompatible().find(|i| *i == other_addon.id ).is_some() ||
-                            other_file.dependencies.iter_incompatible().find(|i| *i == addon.id ).is_some()
+                            file.dependencies.iter_incompatible().any(|i| i == other_addon.id ) ||
+                            other_file.dependencies.iter_incompatible().any(|i| i == addon.id )
                         {
                             dest.insert(Incompat{from:addon,to:other_addon});
                         }

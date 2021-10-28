@@ -22,7 +22,7 @@ pub fn collect_deps(
 
     for dep_id in deps {
         if installed.contains_key(&dep_id) {continue}
-        if install_queue.iter().find(|a| a.id == dep_id ).is_some() {continue}
+        if install_queue.iter().any(|a| a.id == dep_id ) {continue}
 
         let mut z_channel = channel;
         let mut z_update_opt = update_opt;
@@ -47,7 +47,7 @@ pub fn collect_deps(
             FilesResult::Error(e) => hard_error!("Failed to fetch dependency: {}",e),
         };
 
-        if dep_files.iter().find(|v| game_version.matches(v.game_version.iter()) ).is_none() {
+        if !dep_files.iter().any(|v| game_version.matches(v.game_version.iter()) ) {
             hard_error!("No version for current game version: {}",dep_info.slug);
         }
 

@@ -36,9 +36,9 @@ pub fn find_to_install_version_by_key<'a>(s: &str, v: &'a [AddonFile], game_vers
     match_str::match_str(s,&[&iter_display_name,&iter_file_name])
 }
 
-pub fn match_str<'a,Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
-    fn match_sub<'a,Z>(s: &str, srcs: &[&[(Z,&str)]], f: impl Fn(&(Z,String))->Option<Match<Z>>) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
-        fn match_in<'a,Z>(s: &str, src: &[(Z,String)], f: impl Fn(&(Z,String))->Option<Match<Z>>) -> Vec<Match<Z>> where Z: Clone {
+pub fn match_str<Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
+    fn match_sub<Z>(s: &str, srcs: &[&[(Z,&str)]], f: impl Fn(&(Z,String))->Option<Match<Z>>) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
+        fn match_in<Z>(s: &str, src: &[(Z,String)], f: impl Fn(&(Z,String))->Option<Match<Z>>) -> Vec<Match<Z>> where Z: Clone {
             src.iter()
                 .filter_map(f)
                 .collect()
@@ -134,7 +134,7 @@ fn cut_after_slash(s: &str) -> &str {
     if let Some(i) = s.rfind('/') {
         &s[i+1..]
     }else{
-        &s[..]
+        s
     }
 }
 
@@ -148,8 +148,8 @@ fn string_remove_1(s: &mut String) {
 
 fn string_remove_2(s: &mut String) {
     for b in unsafe{s.as_bytes_mut()} {
-        if *b == ' ' as u8 || *b == '-' as u8 || *b == ',' as u8 {
-            *b = '_' as u8;
+        if *b == b' ' || *b == b'-' || *b == b',' {
+            *b = b'_';
         }
     }
     debug_assert!(std::str::from_utf8(s.as_bytes()).is_ok());
@@ -158,7 +158,7 @@ fn string_remove_2(s: &mut String) {
 fn string_remove_3(s: &mut String) {
     unsafe{
         s.as_mut_vec()
-            .retain(|b| *b != '_' as u8);
+            .retain(|b| *b != b'_');
     }
     debug_assert!(std::str::from_utf8(s.as_bytes()).is_ok());
 }

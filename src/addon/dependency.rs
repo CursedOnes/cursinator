@@ -53,32 +53,32 @@ impl Dependency {
 pub struct Dependencies(Vec<Dependency>);
 
 impl Dependencies {
-    pub fn iter_embedded_library<'a>(&'a self) -> impl Iterator<Item=AddonID>+'a {
+    pub fn iter_embedded_library(&self) -> impl Iterator<Item=AddonID>+'_ {
         self.iter()
             .filter(|d| matches!(d,Dependency::EmbeddedLibrary(_)) )
             .map(|d| d.id() )
     }
-    pub fn iter_optional<'a>(&'a self) -> impl Iterator<Item=AddonID>+'a {
+    pub fn iter_optional(&self) -> impl Iterator<Item=AddonID>+'_ {
         self.iter()
             .filter(|d| matches!(d,Dependency::Optional(_)) )
             .map(|d| d.id() )
     }
-    pub fn iter_required<'a>(&'a self) -> impl Iterator<Item=AddonID>+'a {
+    pub fn iter_required(&self) -> impl Iterator<Item=AddonID>+'_ {
         self.iter()
             .filter(|d| matches!(d,Dependency::Required(_)) )
             .map(|d| d.id() )
     }
-    pub fn iter_tool<'a>(&'a self) -> impl Iterator<Item=AddonID>+'a {
+    pub fn iter_tool(&self) -> impl Iterator<Item=AddonID>+'_ {
         self.iter()
             .filter(|d| matches!(d,Dependency::Tool(_)) )
             .map(|d| d.id() )
     }
-    pub fn iter_incompatible<'a>(&'a self) -> impl Iterator<Item=AddonID>+'a {
+    pub fn iter_incompatible(&self) -> impl Iterator<Item=AddonID>+'_ {
         self.iter()
             .filter(|d| matches!(d,Dependency::Incompatible(_)) )
             .map(|d| d.id() )
     }
-    pub fn iter_include<'a>(&'a self) -> impl Iterator<Item=AddonID>+'a {
+    pub fn iter_include(&self) -> impl Iterator<Item=AddonID>+'_ {
         self.iter()
             .filter(|d| matches!(d,Dependency::Include(_)) )
             .map(|d| d.id() )
@@ -133,7 +133,7 @@ impl<'de> Deserialize<'de> for Dependency {
         DepIntermediate::deserialize(deserializer)
         .map(|dep| 
             Self::from_idx(dep.r#type,dep.addon_id)
-                .expect(&format!("Unknown DependencyType {}",dep.r#type))
+                .unwrap_or_else(|| panic!("Unknown DependencyType {}",dep.r#type))
         )
     }
 }

@@ -50,8 +50,8 @@ impl AddonFile {
             if conf.url_txt {
                 // write .url.txt.part with file url and SHA1 hash
                 let mut url_txt_file = file_write(&url_txt_part_path)?;
-                write!(url_txt_file,"{}\n",self.download_url.0.trim())?;
-                write!(url_txt_file,"{}\n",sha.to_string())?;
+                writeln!(url_txt_file,"{}",self.download_url.0.trim())?;
+                writeln!(url_txt_file,"{}",sha.to_string())?;
                 url_txt_file.flush()?;
             }
 

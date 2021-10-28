@@ -99,11 +99,11 @@ impl AddonFile {
         if let Some(b) = b { //TODO proper regex
             let b = b.trim().to_lowercase();
             for g in &self.game_version {
-                if g.0.trim().to_lowercase().find(&b).is_some() {
+                if g.0.trim().to_lowercase().contains(&b) {
                     return false;
                 }
             }
-            !self.file_name.trim().to_lowercase().find(&b).is_some()
+            !self.file_name.trim().to_lowercase().contains(&b)
         } else {
             true
         }

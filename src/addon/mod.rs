@@ -44,7 +44,7 @@ impl PartialEq<FileGameVersion> for GameVersion {
     fn eq(&self, other: &FileGameVersion) -> bool {
         let s = self.0.trim();
         let other = other.0.trim();
-        let s: Vec<_> = s.splitn(2,"x").collect();
+        let s: Vec<_> = s.splitn(2,'x').collect();
         if s.len() > 2 {
             panic!("Invalid game version pattern");
         } else if s.len() == 2 {
@@ -59,7 +59,7 @@ impl PartialEq<FileGameVersion> for GameVersion {
 
 impl GameVersion {
     pub fn matches<'a>(&self, mut gv: impl Iterator<Item=&'a FileGameVersion>) -> bool {
-        gv.find(|v| &self == v ).is_some()
+        gv.any(|v| self == v )
     }
     pub fn matches_idx<'a>(&self, gv: impl Iterator<Item=&'a FileGameVersion>) -> Option<usize> {
         gv.enumerate().find(|(_,v)| &self == v ).map(|(i,_)| i )

@@ -32,7 +32,7 @@ pub fn main(
 
     fix_discrepancy(&mut versions, addon.installed.as_ref().unwrap());
 
-    if versions.iter().find(|v| repo.conf.game_version.matches(v.game_version.iter()) ).is_none() {
+    if !versions.iter().any(|v| repo.conf.game_version.matches(v.game_version.iter()) ) {
         hard_error!("No version for current game version");
     }
 

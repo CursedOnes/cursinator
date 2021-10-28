@@ -4,7 +4,7 @@ use super::*;
 
 impl API {
     pub fn search_key(&self, key: &str, page_size: u64, off: u64) -> anyhow::Result<Vec<AddonInfo>> {
-        anyhow::ensure!(key.len() != 0, "to-search key cannot be empty");
+        anyhow::ensure!(!key.is_empty(), "to-search key cannot be empty");
         if self.offline {hard_error!("Offline mode")};
         let url = format!(
             "{domain}/addon/search?gameId=432&index={off}&sectionId=6&searchFilter={key}",
@@ -18,7 +18,7 @@ impl API {
         Ok(res)
     }
     pub fn search_slug(&self, slug: &AddonSlug) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
-        anyhow::ensure!(slug.0.len() != 0, "to-search slug cannot be empty");
+        anyhow::ensure!(!slug.0.is_empty(), "to-search slug cannot be empty");
         match self._search_slug(slug,0,50) {
             Ok(Err(e)) => {
                 if e.len() < 50 {return Ok(Err(e));}

@@ -37,11 +37,11 @@ pub fn main(
         FilesResult::Error(e) => hard_error!("Failed to fetch online information: {}",e),
     };
 
-    if versions.iter().find(|v| repo.conf.game_version.matches(v.game_version.iter()) ).is_none() {
+    if !versions.iter().any(|v| repo.conf.game_version.matches(v.game_version.iter()) ) {
         hard_error!("No version for current game version");
     }
 
-    let channel = rt.unwrap_or(ReleaseTypeMode::new(false,false,false)); //TODO use channel from previous install
+    let channel = rt.unwrap_or_else(|| ReleaseTypeMode::new(false,false,false) ); //TODO use channel from previous install
 
     let file;
     if let Some(version) = version {

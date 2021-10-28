@@ -65,8 +65,7 @@ pub fn fix_discrepancy(
         // find the next slot after the last with smaller id
         let slot = versions.iter()
             .enumerate()
-            .filter(|(_,v)| v.id.0 > installed.id.0 )
-            .next()
+            .find(|(_,v)| v.id.0 > installed.id.0 )
             .map(|(i,_)| i )
             .unwrap_or(versions.len());
 

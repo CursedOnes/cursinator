@@ -42,7 +42,7 @@ pub fn main(
                 if value == "-" {
                     addon.version_blacklist = None;
                 } else {
-                    addon.version_blacklist = Some(value.to_owned());
+                    addon.version_blacklist = Some(value);
                 }
                 true
             } else {
