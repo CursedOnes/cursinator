@@ -6,6 +6,14 @@ use super::GameVersion;
 use super::files::AddonFile;
 use super::release_type::ReleaseType;
 
+/// Examples
+/// release | beta | alpha | result
+/// ------- | ---- | ----- | -
+/// false | false | true | will pick the latest version
+/// true | true | true | will pick the latest release, or the latest beta if there is no release, or the latest if there is no beta or release
+/// true | false | true | will pick the latest release, or the latest (alpha or beta) if there is no release
+/// false | true | true | will pick the latest beta, or the latest (alpha) if there is no beta
+/// 
 #[derive(Deserialize,Serialize,Clone,Copy,PartialEq)]
 pub struct ReleaseTypeMode {
     pub release: bool, //TODO warn if (false,false,false)
@@ -16,7 +24,7 @@ pub struct ReleaseTypeMode {
 impl ReleaseTypeMode {
     pub fn new(mut release: bool, mut beta: bool, mut alpha: bool) -> Self {
         if !(release|beta|alpha) {
-            release=true;beta=true;alpha=true;
+            release=true; beta=true; alpha=true;
         }
         Self{release,beta,alpha}
     }
@@ -48,27 +56,37 @@ impl ReleaseTypeMode {
             r = find_legal(v, ReleaseType::Release, gv, blacklist);
         }
         if r.is_none() && self.beta {
-            r = find_legal(v, ReleaseType::Beta, gv, blacklist);
+            r = find_legal(v, ReleaseType::Beta   , gv, blacklist);
         }
         if r.is_none() && self.alpha {
-            r = find_legal(v, ReleaseType::Alpha, gv, blacklist);
+            r = find_legal(v, ReleaseType::Alpha  , gv, blacklist);
+        }
+
+        if r.is_none() {
+            r = v.iter().last();
         }
 
         r
     }
     pub fn pick_level(&self, v: impl Iterator<Item=ReleaseType>+DoubleEndedIterator) -> ReleaseType {
-        let (mut a,mut b,mut r) = (false,false,false);
+        let (
+            mut alpha_found,
+            mut beta_found,
+            mut release_found
+        ) = Default::default();
 
         for v in v.rev() {
             match v {
-                ReleaseType::Release => r = true,
-                ReleaseType::Beta => b = true,
-                ReleaseType::Alpha => a = true,
+                ReleaseType::Release => release_found = true,
+                ReleaseType::Beta    => beta_found    = true,
+                ReleaseType::Alpha   => alpha_found   = true,
             }
         }
 
-        if self.release && r   {return ReleaseType::Release;}
-        if self.beta    && r|b {return ReleaseType::Beta;}
+        if self.release && release_found                        {return ReleaseType::Release;}
+        if self.beta    && release_found|beta_found             {return ReleaseType::Beta;}
+        if self.alpha   && release_found|beta_found|alpha_found {return ReleaseType::Alpha;}
+        
         ReleaseType::Alpha
     }
 }

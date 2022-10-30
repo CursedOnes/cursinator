@@ -72,7 +72,7 @@ impl From<File> for AddonFile {
             alternate_file_id: file.alternate_file_id.unwrap_or(0).try_into().unwrap(),
             dependencies: file.dependencies.into(),
             package_fingerprint: file.file_fingerprint as u32,
-            game_version: file.game_versions.into_iter().map(|gv| FileGameVersion(gv) ).collect(),
+            game_version: file.game_versions.into_iter().map(FileGameVersion).collect(),
             has_install_script: false, //TODO
         }
     }

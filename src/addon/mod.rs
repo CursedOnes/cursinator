@@ -8,7 +8,6 @@ pub mod rtm;
 use std::fmt::Display;
 
 use serde::{Deserialize,Serialize};
-use serde_derive::*;
 
 #[derive(Deserialize,Serialize,Copy,Clone,PartialEq,Eq,Hash)]
 #[serde(transparent)]

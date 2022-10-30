@@ -43,7 +43,7 @@ pub fn addon_file_display_name(f: &AddonFile) -> String {
     if d == f {
         f.to_owned()
     }else{
-        format!("{} ({})",d,f)
+        format!("{d} ({f})")
     }
 }
 

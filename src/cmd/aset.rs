@@ -113,6 +113,6 @@ impl Display for UpdateOpt {
             UpdateOpt::Implicit => "implicit",
             UpdateOpt::Explicit => "explicit",
         };
-        write!(f,"{}",v)
+        write!(f,"{v}")
     }
 }

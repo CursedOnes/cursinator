@@ -64,7 +64,7 @@ pub fn print_addon(
     max_width: usize,
     color: Koller,
 ) {
-    let prefix = format!("{}: {}",slug,name);
+    let prefix = format!("{slug}: {name}");
 
     let mut suffix1 = "".to_owned();
     if let Some(rt) = avail_rt {
@@ -88,7 +88,7 @@ pub fn print_addon(
         if summary_width < summary.len() {
             summ = format!(": {}...",&summary[..summary_width-4]);
         } else {
-            summ = format!(": {}",summary);
+            summ = format!(": {summary}");
         }
     }
 
