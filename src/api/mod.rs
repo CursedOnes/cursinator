@@ -1,18 +1,22 @@
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
 use crate::conf::defaults::{default_api_domain, default_api_headers};
-use crate::{dark_log, hard_error, warn};
+use crate::{dark_log, hard_error, warn, error};
 
 pub mod search;
 pub mod files;
 
+use furse::Furse;
+use furse::structures::file_structs::FileIndex;
+use futures::executor::block_on;
 use serde_derive::*;
 use ureq::Agent;
 
 pub struct API {
-    pub domain: String,
+    // pub domain: String,
     pub agent: Agent,
     pub headers: Vec<(String,String)>,
+    pub furse: Furse,
     pub offline: bool,
 }
 
@@ -33,18 +37,33 @@ impl API {
     fn test_api() -> Self {
         Self {
             agent: Agent::new(),
-            domain: default_api_domain(),
             headers: default_api_headers(),
+            furse: Furse::new(include_str!("../../cf_test_key").trim()),
             offline: false,
         }
     }
 
     pub fn addon_info(&self, id: AddonID) -> anyhow::Result<Option<AddonInfo>> {
         if self.offline {hard_error!("Offline mode")};
-        let url = format!("{domain}/addon/{id}",id=id.0,domain=self.domain);
-        match self.http_get(&url) {
-            Ok(s) => Ok(Some( s.into_json::<AddonInfo>()? )),
-            Err(ureq::Error::Status(404,_)) => Ok(None),
+
+        dark_log!("API: Query Addon Info for {}",id.0);
+
+        match block_on(self.furse.get_mod(id.0 as i32)) {
+            Ok(mod_info) => {
+                assert_eq!(id.0, mod_info.id as u64);
+                if mod_info.allow_mod_distribution != Some(true) {
+                    error!("Mod distribution not allowed: {}",mod_info.slug);
+                    return Ok(None); //TODO handle undistributable mod error
+                }
+                Ok(Some(AddonInfo {
+                    id,
+                    name: mod_info.name,
+                    slug: AddonSlug(mod_info.slug),
+                    summary: mod_info.summary,
+                    latest_files_indexes: mod_info.latest_files_indexes,
+                }))
+            },
+            Err(furse::Error::ReqwestError(rerr)) if rerr.status() == Some(reqwest::StatusCode::NOT_FOUND) => Ok(None),
             Err(e) => Err(e.into()),
         }
     }
@@ -68,27 +87,20 @@ pub struct AddonInfo {
     pub name: String,
     pub slug: AddonSlug,
     pub summary: String,
-    pub game_version_latest_files: Vec<GameVersionLatestFiles>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all="camelCase")]
-pub struct GameVersionLatestFiles {
-    pub game_version: FileGameVersion,
-    pub project_file_id: FileID,
-    pub file_type: ReleaseType,
+    pub latest_files_indexes: Vec<FileIndex>,
 }
 
 impl AddonInfo {
     pub fn release_type(&self, game_version: &GameVersion) -> Option<ReleaseType> {
-        let mut rt = None;
-        self.game_version_latest_files.iter()
-            .filter(|g| *game_version == g.game_version )
-            .for_each(|g| 
-                if rt.is_none() || g.file_type >= rt.unwrap() {
-                    rt = Some(g.file_type);
+        let mut max_release_type = None;
+        self.latest_files_indexes.iter()
+            .filter(|g| *game_version.0 == g.game_version )
+            .for_each(|g| {
+                let file_release_type = ReleaseType::from(g.release_type.clone());
+                if max_release_type.is_none() || file_release_type >= max_release_type.unwrap() {
+                    max_release_type = Some(file_release_type);
                 }
-            );
-        rt
+            });
+        max_release_type
     }
 }

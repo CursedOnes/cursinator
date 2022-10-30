@@ -25,6 +25,13 @@ env_logger = "0.8"
 termion = "1.5"
 rustc-hash = "1.1"
 regex = "1.4"
+furse = "1.5.5"
+futures = "0.3"
+reqwest = { version = "~0.11.12", default-features = false, features = [
+    "json",
+    "rustls-tls",
+] } # TODO ability to use reqwest error codes in furse without also importing it as dependency
+tokio = { version = "1", features = ["full"] }
 
 [profile.release]
 codegen-units = 1

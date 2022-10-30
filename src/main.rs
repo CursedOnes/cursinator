@@ -2,7 +2,8 @@ use cursinator::Op;
 
 use structopt::*;
 
-fn main() {
+#[tokio::main] //TODO use reqwest::blocking in furse or rewrite to async
+async fn main() {
     env_logger::init();
 
     with_args();

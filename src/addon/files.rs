@@ -1,5 +1,7 @@
 use std::borrow::Borrow;
+use std::convert::TryInto;
 
+use furse::structures::file_structs::File;
 use serde_derive::*;
 
 use super::{FileGameVersion, FileID};
@@ -52,5 +54,26 @@ impl AddonFile {
 impl Borrow<ReleaseType> for AddonFile {
     fn borrow(&self) -> &ReleaseType {
         &self.release_type
+    }
+}
+
+impl From<File> for AddonFile {
+    fn from(file: File) -> Self {
+        Self {
+            id: FileID(file.id.try_into().unwrap()),
+            display_name: file.display_name,
+            file_name: file.file_name,
+            file_date: format!("{}Z",file.file_date.to_rfc3339().split('+').next().unwrap()),
+            file_length: file.file_length as u64,
+            release_type: file.release_type.into(),
+            is_available: file.is_available && file.download_url.is_some(),
+            download_url: DownloadURL(file.download_url.expect("TODO handle undistributable addon error").to_string()),
+            is_alternate: file.expose_as_alternative == Some(true),
+            alternate_file_id: file.alternate_file_id.unwrap_or(0).try_into().unwrap(),
+            dependencies: file.dependencies.into(),
+            package_fingerprint: file.file_fingerprint as u32,
+            game_version: file.game_versions.into_iter().map(|gv| FileGameVersion(gv) ).collect(),
+            has_install_script: false, //TODO
+        }
     }
 }

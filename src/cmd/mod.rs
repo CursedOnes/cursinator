@@ -36,9 +36,10 @@ pub fn main(o: Op) {
 
     let api = API {
         agent: ureq::Agent::new(),
-        domain: repo.conf.api_domain.clone(),
+        //domain: repo.conf.api_domain.clone(),
         headers: repo.conf.api_headers.clone(),
         offline: o.offline,
+        furse: furse::Furse::new(include_str!("../../cf_test_key").trim()), //TODO option for user to supply API key?
     };
 
     let modified =

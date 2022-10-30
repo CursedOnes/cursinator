@@ -1,9 +1,21 @@
+use furse::structures::file_structs::FileReleaseType;
+
 
 #[derive(Copy,Clone,PartialEq,Eq)]
 pub enum ReleaseType {
     Alpha,
     Beta,
     Release,
+}
+
+impl From<FileReleaseType> for ReleaseType {
+    fn from(rt: FileReleaseType) -> Self {
+        match rt {
+            FileReleaseType::Release => Self::Release,
+            FileReleaseType::Beta => Self::Beta,
+            FileReleaseType::Alpha => Self::Alpha,
+        }
+    }
 }
 
 impl ReleaseType {
