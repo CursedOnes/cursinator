@@ -43,17 +43,38 @@ impl PartialEq<FileGameVersion> for GameVersion {
     fn eq(&self, other: &FileGameVersion) -> bool {
         let s = self.0.trim();
         let other = other.0.trim();
-        let s: Vec<_> = s.splitn(2,'x').collect();
-        if s.len() > 2 {
-            panic!("Invalid game version pattern");
-        } else if s.len() == 2 {
-            other.starts_with(s[0]) && other.ends_with(s[1])
-        } else if s.len() == 1 {
-            other == s[0]
-        } else {
+        let mut s = s.splitn(2,'x');
+
+        let start = s.next().expect("Invalid game version pattern");
+        let mut start_stripped = start;
+        if let Some(s) = start.strip_suffix('.') {
+            start_stripped = s;
+        }
+        let end = s.next();
+
+        if s.next().is_some() {
             panic!("Invalid game version pattern");
         }
+
+        if let Some(end) = end {
+            (other.starts_with(start) && other.ends_with(end)) || eq_str_concat(other, [start_stripped,end])
+        } else {
+            other == start
+        }
     }
+}
+
+fn eq_str_concat<const N: usize>(a: &str, other: [&str;N]) -> bool {
+    let mut a = a.as_bytes();
+    for b in other {
+        let b = b.as_bytes();
+        if a.starts_with(b) {
+            a = unsafe { a.get_unchecked(..b.len()) };
+        } else {
+            return false;
+        }
+    }
+    a.is_empty()
 }
 
 impl GameVersion {
