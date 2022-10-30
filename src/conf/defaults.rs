@@ -2,7 +2,7 @@ pub fn default_api_headers() -> Vec<(String,String)> {
     vec![]
 }
 pub fn default_api_domain() -> String {
-    "https://addons-ecs.forgesvc.net/api/v2".to_owned()
+    "https://api.curseforge.com/v1".to_owned()
 }
 pub fn default_url_txt() -> bool {
     true
