@@ -14,7 +14,7 @@ impl API {
 
         dark_log!("API: Query Addon Files for {}",id.0);
 
-        match block_on(self.furse.get_mod_files(id.0 as i32)) {
+        match self.handle_retry(|| block_on(self.furse.get_mod_files(id.0 as i32)) ) {
             Ok(mod_files) => {
                 let mut mod_files: Vec<AddonFile> = mod_files.into_iter().map(Into::into).collect();
                 mod_files.sort_unstable_by_key(|mod_file| mod_file.id.0 );

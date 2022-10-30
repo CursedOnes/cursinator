@@ -25,7 +25,7 @@ pub struct Conf {
     #[serde(default="default_addon_mtime")]
     pub addon_mtime: bool,
     #[serde(default="default_soft_retries")]
-    pub soft_retries: usize,
+    pub soft_retries: u32,
     #[serde(default="default_api_headers")]
     pub api_headers: Vec<(String,String)>,
     #[serde(default="default_api_domain")]

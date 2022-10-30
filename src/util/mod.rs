@@ -6,7 +6,12 @@ macro_rules! hard_assert {
     ($oof:expr,$($arg:tt)*) => {{
         if !$oof {
             $crate::error!($($arg)*);
-            std::process::exit(1);
+            #[cfg(debug_assertions)] {
+                panic!($($arg)*);
+            }
+            #[cfg(not(debug_assertions))] {
+                std::process::exit(1);
+            }
         }
     }}
 }
@@ -15,7 +20,12 @@ macro_rules! hard_assert {
 macro_rules! hard_error {
     ($($arg:tt)*) => {{
         $crate::error!($($arg)*);
-        std::process::exit(1);
+        #[cfg(debug_assertions)] {
+            panic!($($arg)*);
+        }
+        #[cfg(not(debug_assertions))] {
+            std::process::exit(1);
+        }
     }}
 }
 
@@ -88,6 +98,7 @@ macro_rules! error {
     ($($arg:tt)*) => {{
         let c = $crate::print::Koller::red_bold();
         eprintln!("{}{}error: {}{}{}",c.a,c.b,c.c,c.d,format!($($arg)*));
+        //panic!("{}",format!($($arg)*));
     }}
 }
 #[macro_export]
@@ -104,4 +115,20 @@ macro_rules! dark_log {
         let x = format!($($arg)*);
         eprintln!("{}{}{}",Fg(Rgb(127,127,127)),x,Fg(Reset));
     }}
+}
+
+#[cfg(debug_assertions)]
+#[macro_export]
+macro_rules! debug_or_try {
+    ($($arg:tt)*) => {
+        $($arg)* .unwrap()
+    }
+}
+
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! debug_or_try {
+    ($($arg:tt)*) => {
+        $($arg)* ?
+    }
 }

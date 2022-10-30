@@ -36,6 +36,7 @@ pub fn main(o: Op) {
 
     let api = API {
         agent: ureq::Agent::new(),
+        retry_count: repo.conf.soft_retries.max(1),
         //domain: repo.conf.api_domain.clone(),
         headers: repo.conf.api_headers.clone(),
         offline: o.offline,

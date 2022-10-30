@@ -10,6 +10,6 @@ pub fn default_url_txt() -> bool {
 pub fn default_addon_mtime() -> bool {
     true
 }
-pub fn default_soft_retries() -> usize {
-    2
+pub fn default_soft_retries() -> u32 {
+    4
 }

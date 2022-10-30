@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
 use crate::conf::defaults::{default_api_domain, default_api_headers};
@@ -15,6 +17,7 @@ use ureq::Agent;
 pub struct API {
     // pub domain: String,
     pub agent: Agent,
+    pub retry_count: u32,
     pub headers: Vec<(String,String)>,
     pub furse: Furse,
     pub offline: bool,
@@ -37,6 +40,7 @@ impl API {
     fn test_api() -> Self {
         Self {
             agent: Agent::new(),
+            retry_count: 4,
             headers: default_api_headers(),
             furse: Furse::new(include_str!("../../cf_test_key").trim()),
             offline: false,
@@ -48,7 +52,7 @@ impl API {
 
         dark_log!("API: Query Addon Info for {}",id.0);
 
-        match block_on(self.furse.get_mod(id.0 as i32)) {
+        match self.handle_retry(|| block_on(self.furse.get_mod(id.0 as i32)) ) {
             Ok(mod_info) => {
                 assert_eq!(id.0, mod_info.id as u64);
                 if mod_info.allow_mod_distribution != Some(true) {
@@ -77,6 +81,33 @@ impl API {
             }
         }
         self.search_slug(id)
+    }
+
+    fn handle_retry<T>(&self, mut f: impl FnMut() -> Result<T,furse::Error>) -> Result<T,furse::Error> {
+        let mut retry_i = 0;
+        loop {
+            match (f)() {
+                Err(e) => {
+                    //TODO retrieve and handle Retry-After response
+                    let is_429 = {
+                        match &e {
+                            furse::Error::ReqwestError(e) if e.status() == Some(reqwest::StatusCode::TOO_MANY_REQUESTS) => true,
+                            _ => false,
+                        }
+                    };
+                    if is_429 {
+                        error!("Retry query due to 429");
+                        std::thread::sleep(Duration::from_secs( 4u64.pow(retry_i.min(3)) ));
+                        if retry_i < self.retry_count {
+                            retry_i += 1;
+                            continue;
+                        }
+                    }
+                    return Err(e);
+                }
+                v => return v,
+            };
+        }
     }
 }
 

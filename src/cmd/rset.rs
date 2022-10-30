@@ -30,7 +30,7 @@ pub fn main(
             },
             WhatRSet::SoftRetries => if let Some(value) = value {
                 if o.noop {return false;}
-                repo.conf.soft_retries = unwrap_result_error!(value.trim().parse::<usize>());
+                repo.conf.soft_retries = unwrap_result_error!(value.trim().parse::<u32>());
                 true
             } else {
                 eprintln!("\tsoft-retries={}",repo.conf.soft_retries);
