@@ -1,3 +1,4 @@
+use std::fmt::Arguments;
 use std::ops::Range;
 
 use crate::addon::{AddonID, GameVersion};
@@ -8,30 +9,58 @@ use crate::print::Koller;
 use super::*;
 
 pub fn find_installed_mod_by_key(s: &str, v: &LocalAddons, purge_mode: bool) -> Result<Match<AddonID>,Vec<Match<AddonID>>> {
-        let iter_slug: Vec<_> = v.values()
-            .filter(|v| v.installed.is_some() || purge_mode )
-            .map(|v| (v.id,v.slug.0.trim()) )
-            .collect();
-        let iter_name: Vec<_> = v.values()
-            .filter(|v| v.installed.is_some() || purge_mode )
-            .map(|v| (v.id,v.name.trim()) )
-            .collect();
-        let iter_filename: Vec<_> = v.values() 
-            .filter_map(|v| v.installed.as_ref().map(|w| (v.id,w) ) )
-            .map(|(z,v)| (z,cut_after_slash(v.file_name.trim())) )
-            .collect();
+    if let Ok(i) = s.parse::<u64>() {
+        let valid_addons = v.values()
+            .filter(|v| v.installed.is_some() || purge_mode );
+        for addon in valid_addons {
+            if addon.id.0 == i {
+                return Ok(Match {
+                    z: addon.id,
+                    string: addon.slug.0.clone(),
+                    range: 0..addon.slug.0.len(),
+                });
+            }
+        }
+    }
+
+    let iter_slug: Vec<_> = v.values()
+        .filter(|v| v.installed.is_some() || purge_mode )
+        .map(|v| (v.id,v.slug.0.trim()) )
+        .collect();
+    let iter_name: Vec<_> = v.values()
+        .filter(|v| v.installed.is_some() || purge_mode )
+        .map(|v| (v.id,v.name.trim()) )
+        .collect();
+    let iter_filename: Vec<_> = v.values() 
+        .filter_map(|v| v.installed.as_ref().map(|w| (v.id,w) ) )
+        .map(|(z,v)| (z,cut_after_slash(v.file_name.trim())) )
+        .collect();
 
     match_str::match_str(s,&[&iter_slug,&iter_name,&iter_filename])
 }
 pub fn find_to_install_version_by_key<'a>(s: &str, v: &'a [AddonFile], game_version: &GameVersion) -> Result<Match<&'a AddonFile>,Vec<Match<&'a AddonFile>>> {
-        let iter_display_name: Vec<_> = v.iter()
-            .filter(|v| game_version.matches(v.game_version.iter()) )
-            .map(|v| (v,v.display_name.trim()) )
-            .collect();
-        let iter_file_name: Vec<_> = v.iter()
-            .filter(|v| game_version.matches(v.game_version.iter()) )
-            .map(|v| (v,cut_after_slash(v.file_name.trim())) )
-            .collect();
+    if let Ok(i) = s.parse::<u64>() {
+        let valid_files = v.iter()
+            .filter(|v| game_version.matches(v.game_version.iter()) );
+        for file in valid_files {
+            if file.id.0 == i {
+                return Ok(Match {
+                    z: file,
+                    string: s.to_owned(),
+                    range: 0..s.len(),
+                });
+            }
+        }
+    }
+    
+    let iter_display_name: Vec<_> = v.iter()
+        .filter(|v| game_version.matches(v.game_version.iter()) )
+        .map(|v| (v,v.display_name.trim()) )
+        .collect();
+    let iter_file_name: Vec<_> = v.iter()
+        .filter(|v| game_version.matches(v.game_version.iter()) )
+        .map(|v| (v,cut_after_slash(v.file_name.trim())) )
+        .collect();
 
     match_str::match_str(s,&[&iter_display_name,&iter_file_name])
 }
