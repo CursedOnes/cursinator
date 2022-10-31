@@ -13,9 +13,9 @@ use crate::*;
 use crate::util::fs::Finalize;
 
 use anyhow::anyhow;
-use chrono::NaiveDateTime;
+use chrono::DateTime;
 use filetime::{FileTime, set_file_times};
-use sha1::{Digest, Sha1};
+use sha1::Sha1;
 use util::fs::remove_if;
 
 use super::files::AddonFile;
@@ -87,7 +87,7 @@ impl AddonFile {
 
             if conf.addon_mtime {
                 // write addon publish time and current time to mtime and atime
-                if let Some(addon_time) = log_error!(NaiveDateTime::parse_from_str(&self.file_date, "%Y-%m-%dT%H:%M:%S.%fZ")) {
+                if let Some(addon_time) = log_error!(parse_date(&self.file_date)) {
                     let addon_time = FileTime::from_unix_time(addon_time.timestamp(),0);
                     let now = FileTime::now();
                     log_error!(set_file_times(&file_part_path, now, addon_time),   |e| "Failed to set file time: {}",e);
@@ -222,7 +222,19 @@ macro_rules! try_from {
     };
 }
 
+fn parse_date(s: &str) -> Result<DateTime<chrono::FixedOffset>,chrono::ParseError> {
+    if let Ok(v) = DateTime::parse_from_rfc3339(s) {
+        return Ok(v);
+    }
+    //TODO properly handle cases like "0001-01-01T00:00:00"
+    if let Ok(v) = DateTime::parse_from_rfc3339(&format!("{s}Z")) {
+        return Ok(v);
+    }
+    chrono::DateTime::parse_from_rfc3339(s)
+}
+
 #[test]
-fn parse_date() {
-    NaiveDateTime::parse_from_str("2021-02-13T20:36:05.29Z","%Y-%m-%dT%H:%M:%S.%fZ").unwrap();
+fn parse_date_test() {
+    parse_date("2021-02-13T20:36:05Z").unwrap();
+    parse_date("2021-02-13T20:36:05Z").unwrap();
 }
