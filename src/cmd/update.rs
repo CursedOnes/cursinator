@@ -12,7 +12,7 @@ use crate::addon::local::UpdateOpt;
 
 pub fn main(
     o: &Op,
-    api: &API,
+    api: &mut API,
     repo: &mut Repo,
     rt: Option<ReleaseTypeMode>,
     allow_downgrade: bool,

@@ -6,7 +6,7 @@ use crate::print::term_h;
 
 pub fn main(
     _: &Op,
-    api: &API,
+    api: &mut API,
     repo: &Repo,
     mut page_size: u32,
     page_n: u32,

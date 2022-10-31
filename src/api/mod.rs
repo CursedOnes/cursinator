@@ -1,7 +1,9 @@
+use std::borrow::Cow;
 use std::time::{Duration, SystemTime};
 
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
+use crate::conf::Conf;
 use crate::conf::defaults::{default_api_domain, default_api_headers};
 use crate::retrieve_api_key::cf_api_key;
 use crate::{dark_log, hard_error, warn, error};
@@ -20,7 +22,7 @@ pub struct API {
     pub agent: Agent,
     pub retry_count: u32,
     pub headers: Vec<(String,String)>,
-    pub furse: Furse,
+    pub furse: LazyFurse,
     pub offline: bool,
 }
 
@@ -43,17 +45,17 @@ impl API {
             agent: Agent::new(),
             retry_count: 4,
             headers: default_api_headers(),
-            furse: Furse::new(cf_api_key(None).trim()),
+            furse: LazyFurse::new_test(),
             offline: false,
         }
     }
 
-    pub fn addon_info(&self, id: AddonID) -> anyhow::Result<Option<AddonInfo>> {
+    pub fn addon_info(&mut self, id: AddonID) -> anyhow::Result<Option<AddonInfo>> {
         if self.offline {hard_error!("Offline mode")};
 
         dark_log!("API: Query Addon Info for {}",id.0);
 
-        match self.handle_retry(|| block_on(self.furse.get_mod(id.0 as i32)) ) {
+        match handle_retry(|| block_on(self.furse.get_mut().get_mod(id.0 as i32)), self.retry_count) {
             Ok(addon) => {
                 assert_eq!(id.0, addon.id as u64);
                 if addon.allow_mod_distribution != Some(true) {
@@ -73,7 +75,7 @@ impl API {
         }
     }
 
-    pub fn addon_by_id_or_slug(&self, id: &AddonSlug) ->  anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
+    pub fn addon_by_id_or_slug(&mut self, id: &AddonSlug) ->  anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
         if let Ok(i) = id.0.trim().parse::<u64>() {
             match self.addon_info(AddonID(i)) {
                 Ok(Some(info)) => return Ok(Ok(info)),
@@ -83,31 +85,31 @@ impl API {
         }
         self.search_slug(id)
     }
+}
 
-    fn handle_retry<T>(&self, mut f: impl FnMut() -> Result<T,furse::Error>) -> Result<T,furse::Error> {
-        let mut retry_i = 0;
-        loop {
-            match (f)() {
-                Err(e) => {
-                    if e.is_response_status() == Some(reqwest::StatusCode::TOO_MANY_REQUESTS) {
-                        let wait_duration = parse_retry_duration(
-                            e.is_response()
-                                .and_then(|resp| resp.headers().get(reqwest::header::RETRY_AFTER) )
-                                .and_then(|retry| retry.to_str().ok() ),
-                            4u64.pow(retry_i.min(3)),
-                        );
-                        error!("Too many requests, retry in {wait_duration} seconds");
-                        std::thread::sleep(Duration::from_secs(wait_duration));
-                        if retry_i < self.retry_count {
-                            retry_i += 1;
-                            continue;
-                        }
+fn handle_retry<T>(mut f: impl FnMut() -> Result<T,furse::Error>, retry_count: u32) -> Result<T,furse::Error> {
+    let mut retry_i = 0;
+    loop {
+        match (f)() {
+            Err(e) => {
+                if e.is_response_status() == Some(reqwest::StatusCode::TOO_MANY_REQUESTS) {
+                    let wait_duration = parse_retry_duration(
+                        e.is_response()
+                            .and_then(|resp| resp.headers().get(reqwest::header::RETRY_AFTER) )
+                            .and_then(|retry| retry.to_str().ok() ),
+                        4u64.pow(retry_i.min(3)),
+                    );
+                    error!("Too many requests, retry in {wait_duration} seconds");
+                    std::thread::sleep(Duration::from_secs(wait_duration));
+                    if retry_i < retry_count {
+                        retry_i += 1;
+                        continue;
                     }
-                    return Err(e);
                 }
-                v => return v,
-            };
-        }
+                return Err(e);
+            }
+            v => return v,
+        };
     }
 }
 
@@ -147,4 +149,31 @@ pub(crate) fn parse_retry_duration(retry_after: Option<&str>, fallback: u64) -> 
         }
     }
     fallback
+}
+
+pub struct LazyFurse {
+    furse: Option<Furse>,
+    override_api_key: Option<String>,
+}
+
+impl LazyFurse {
+    pub fn new(conf: &Conf) -> Self {
+        Self {
+            furse: None,
+            override_api_key: conf.override_api_key.clone(),
+        }
+    }
+
+    pub fn new_test() -> Self {
+        Self {
+            furse: None,
+            override_api_key: None,
+        }
+    }
+
+    pub fn get_mut(&mut self) -> &mut Furse {
+        self.furse.get_or_insert_with(||
+            furse::Furse::new(cf_api_key(self.override_api_key.clone().map(Cow::Owned)).trim())
+        )
+    }
 }

@@ -13,7 +13,7 @@ use crate::print::{Koller, term_w, term_h};
 
 pub fn main(
     _: &Op,
-    api: &API,
+    api: &mut API,
     repo: &Repo,
     rt: Option<ReleaseTypeMode>,
     show_all: bool,

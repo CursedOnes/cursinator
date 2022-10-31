@@ -22,7 +22,7 @@ pub fn install_mod(
     version_blacklist: Option<String>,
     // oof
     o: &Op,
-    api: &API,
+    api: &mut API,
     repo: &mut Repo,
 ) -> bool {
     // if current mod installed, add to delete_sched

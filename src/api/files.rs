@@ -9,12 +9,12 @@ use crate::addon::files::AddonFile;
 use super::*;
 
 impl API {
-    pub fn files(&self, id: AddonID) -> FilesResult {
+    pub fn files(&mut self, id: AddonID) -> FilesResult {
         if self.offline {hard_error!("Offline mode")};
 
         dark_log!("API: Query Addon Files for {}",id.0);
 
-        match self.handle_retry(|| block_on(self.furse.get_mod_files(id.0 as i32)) ) {
+        match handle_retry(|| block_on(self.furse.get_mut().get_mod_files(id.0 as i32)), self.retry_count) {
             Ok(mod_files) => {
                 let mut mod_files: Vec<AddonFile> = mod_files.into_iter().map(Into::into).collect();
                 mod_files.sort_unstable_by_key(|mod_file| mod_file.id.0 );
@@ -25,7 +25,7 @@ impl API {
         }
     }
 
-    pub fn files_cached(&self, id: AddonID, cache: &mut FxHashMap<AddonID,FilesResult>) -> FilesResult {
+    pub fn files_cached(&mut self, id: AddonID, cache: &mut FxHashMap<AddonID,FilesResult>) -> FilesResult {
         cache.entry(id)
             .or_insert_with(|| self.files(id) )
             .clone()

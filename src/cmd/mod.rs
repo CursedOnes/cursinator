@@ -3,7 +3,7 @@ use crate::addon::rtm::ReleaseTypeMode;
 use crate::{Op, OpCmd, error, hard_error, log_error};
 use crate::util::match_str::match_str;
 use crate::conf::Repo;
-use crate::api::API;
+use crate::api::{API, LazyFurse};
 use crate::dark_log;
 
 pub mod aset;
@@ -34,13 +34,13 @@ pub fn main(o: Op) {
         Err(e) => hard_error!("Failed to read repo json: {}",e),
     };
 
-    let api = API {
+    let mut api = API {
         agent: ureq::Agent::new(),
         retry_count: repo.conf.soft_retries.max(1),
         //domain: repo.conf.api_domain.clone(),
         headers: repo.conf.api_headers.clone(),
         offline: o.offline,
-        furse: furse::Furse::new(repo.conf.cf_api_key().trim()),
+        furse: LazyFurse::new(&repo.conf),
     };
 
     let modified =
@@ -49,7 +49,7 @@ pub fn main(o: Op) {
         OpCmd::Install { alpha, beta, release, force, addons, version_blacklist } => {
             let mut modified = false;
             for a in addons {
-                match install::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,a,version_blacklist.clone()) {
+                match install::main(&o,&mut api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,a,version_blacklist.clone()) {
                     Ok(v) => modified |= v,
                     Err(e) => error!("Error installing mod: {}",e),
                 }
@@ -57,17 +57,17 @@ pub fn main(o: Op) {
             modified
         },
         OpCmd::Search { page_size, page_n, addon } =>
-            search::main(&o,&api,&repo,page_size,page_n,addon),
+            search::main(&o,&mut api,&repo,page_size,page_n,addon),
         OpCmd::Update { alpha, beta, release, allow_downgrade, force, addon, file } => 
-            update::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),allow_downgrade,force,addon,file),
+            update::main(&o,&mut api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),allow_downgrade,force,addon,file),
         OpCmd::Channel { addon, value } => 
             channel::main(&o,&mut repo,addon,value),
         OpCmd::List {} => 
             list::main(&o,&repo),
         OpCmd::Updates { alpha, beta, release, show_all,older, addon } => 
-            updates::main(&o,&api,&repo,ReleaseTypeMode::new2(release,beta,alpha),show_all,older,addon),
+            updates::main(&o,&mut api,&repo,ReleaseTypeMode::new2(release,beta,alpha),show_all,older,addon),
         OpCmd::UpdateAll { alpha, beta, release } => 
-            update_all::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha)),
+            update_all::main(&o,&mut api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha)),
         OpCmd::Remove { force, addon } => 
             remove::main(&o,&mut repo,force,addon),
         OpCmd::AutoRemove { purge } => 

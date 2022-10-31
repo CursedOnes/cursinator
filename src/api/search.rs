@@ -7,7 +7,7 @@ use crate::addon::AddonSlug;
 use super::*;
 
 impl API {
-    pub fn search_key(&self, key: &str, page_size: u64, off: u64) -> anyhow::Result<Vec<AddonInfo>> {
+    pub fn search_key(&mut self, key: &str, page_size: u64, off: u64) -> anyhow::Result<Vec<AddonInfo>> {
         anyhow::ensure!(!key.is_empty(), "to-search key cannot be empty");
 
         dark_log!("API: Search key {key}");
@@ -21,10 +21,10 @@ impl API {
         })
     }
 
-    pub fn search_query(&self, query: &SearchQuery) -> anyhow::Result<Vec<AddonInfo>> {
+    pub fn search_query(&mut self, query: &SearchQuery) -> anyhow::Result<Vec<AddonInfo>> {
         if self.offline {hard_error!("Offline mode")};
 
-        match self.handle_retry(|| block_on(self.furse.search_mods(&query)) ) {
+        match handle_retry(|| block_on(self.furse.get_mut().search_mods(&query)), self.retry_count) {
             Ok(mod_files) => {Ok(
                 mod_files.into_iter()
                     .filter(|addon| addon.allow_mod_distribution == Some(true) )
@@ -44,7 +44,7 @@ impl API {
         }
     }
 
-    pub fn search_slug(&self, slug: &AddonSlug) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
+    pub fn search_slug(&mut self, slug: &AddonSlug) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
         anyhow::ensure!(!slug.0.is_empty(), "to-search slug cannot be empty");
 
         dark_log!("API: Search slug {}",slug.0);
@@ -67,7 +67,7 @@ impl API {
             v => v,
         }
     }
-    fn _search_slug(&self, slug: &AddonSlug, page_off: u64, page_size: u64) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
+    fn _search_slug(&mut self, slug: &AddonSlug, page_off: u64, page_size: u64) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
         let mut s = self.search_query(&SearchQuery {
             class_id: Some(6),
             slug: Some(slug.0.trim()),

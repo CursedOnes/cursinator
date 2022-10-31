@@ -32,9 +32,3 @@ The API key must either:
         hard_error!("API key cannot be retrieved");
     }
 }
-
-impl Conf {
-    pub fn cf_api_key(&self) -> Cow<'static,str> {
-        cf_api_key(self.override_api_key.as_ref().map(|v| Cow::Owned(v.clone()) ))
-    }
-}

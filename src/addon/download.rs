@@ -21,7 +21,7 @@ use util::fs::remove_if;
 use super::files::AddonFile;
 
 impl AddonFile {
-    pub fn download(&self, conf: &Conf, api: &API) -> Result<DownloadFinalize,anyhow::Error> {
+    pub fn download(&self, conf: &Conf, api: &mut API) -> Result<DownloadFinalize,anyhow::Error> {
         let file_path = self.file_path();
         let url_txt_path = self.url_txt_path();
         let file_part_path = self.file_part_path();
