@@ -30,6 +30,8 @@ pub struct Conf {
     pub api_headers: Vec<(String,String)>,
     #[serde(default="default_api_domain")]
     pub api_domain: String,
+
+    pub override_api_key: Option<String>,
 }
 
 impl Repo {

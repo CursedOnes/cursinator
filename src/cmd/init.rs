@@ -21,6 +21,7 @@ pub fn init(
             soft_retries: default_soft_retries(),
             api_headers: default_api_headers(),
             api_domain: default_api_domain(),
+            override_api_key: None,
         },
         addons: LocalAddons(Default::default()),
     };

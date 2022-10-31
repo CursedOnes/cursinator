@@ -3,6 +3,7 @@ use std::time::{Duration, SystemTime};
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
 use crate::conf::defaults::{default_api_domain, default_api_headers};
+use crate::retrieve_api_key::cf_api_key;
 use crate::{dark_log, hard_error, warn, error};
 
 pub mod search;
@@ -42,7 +43,7 @@ impl API {
             agent: Agent::new(),
             retry_count: 4,
             headers: default_api_headers(),
-            furse: Furse::new(include_str!("../../cf_test_key").trim()),
+            furse: Furse::new(cf_api_key(None).trim()),
             offline: false,
         }
     }

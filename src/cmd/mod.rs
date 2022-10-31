@@ -40,7 +40,7 @@ pub fn main(o: Op) {
         //domain: repo.conf.api_domain.clone(),
         headers: repo.conf.api_headers.clone(),
         offline: o.offline,
-        furse: furse::Furse::new(include_str!("../../cf_test_key").trim()), //TODO option for user to supply API key?
+        furse: furse::Furse::new(repo.conf.cf_api_key().trim()),
     };
 
     let modified =
