@@ -4,7 +4,7 @@ use crate::addon::local::UpdateOpt;
 use crate::conf::Repo;
 use crate::util::match_str::find_installed_mod_by_key;
 use crate::print::error::unwrap_match;
-use crate::{Op, error, hard_error};
+use crate::{Op, error, hard_error, unwrap_result_error};
 use crate::util::match_str::match_str;
 use super::match_bool;
 
@@ -16,7 +16,7 @@ pub fn main(
     value: Option<String>
 ) -> bool {
     let addons = &mut repo.addons;
-    let addon_id = unwrap_match(find_installed_mod_by_key(&addon,addons,true)).z;
+    let addon_id = unwrap_result_error!(unwrap_match(find_installed_mod_by_key(&addon,addons,true))).z;
     let addon = addons.get_mut(&addon_id).unwrap();
 
     if let Some(key) = key {

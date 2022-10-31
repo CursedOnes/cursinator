@@ -46,8 +46,16 @@ pub fn main(o: Op) {
     let modified =
     match o.cmd.clone() {
         OpCmd::Init { .. } => unreachable!(),
-        OpCmd::Install { alpha, beta, release, force, slug, file, version_blacklist } =>
-            install::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,slug,file,version_blacklist),
+        OpCmd::Install { alpha, beta, release, force, addons, version_blacklist } => {
+            let mut modified = false;
+            for a in addons {
+                match install::main(&o,&api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha),force,a,version_blacklist.clone()) {
+                    Ok(v) => modified |= v,
+                    Err(e) => error!("Error installing mod: {}",e),
+                }
+            }
+            modified
+        },
         OpCmd::Search { page_size, page_n, addon } =>
             search::main(&o,&api,&repo,page_size,page_n,addon),
         OpCmd::Update { alpha, beta, release, allow_downgrade, force, addon, file } => 

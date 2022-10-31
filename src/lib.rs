@@ -57,10 +57,8 @@ pub enum OpCmd {
         force: bool,
         #[structopt(short="x",long="version-blacklist",help="version blacklist")]
         version_blacklist: Option<String>,
-        #[structopt(help="Addon slug or id")]
-        slug: String,
-        #[structopt(help="version")]
-        file: Option<String>,
+        #[structopt(help="Addon slug or id, with optional version specified")]
+        addons: Vec<String>,
     },
     #[structopt(about = "Update addon")]
     Update {

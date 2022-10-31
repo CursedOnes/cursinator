@@ -180,6 +180,18 @@ impl<Z> Match<Z> {
     pub fn suffix(&self) -> &str {
         &self.string[self.range.end..]
     }
+    pub fn fmt_error(&self, prefix: &str) -> String {
+        let c = Koller::blue_bold();
+        format!(
+            "{}\t{}{}{}{}{}{}{}",
+            prefix,
+            self.prefix(),
+            c.a,c.b,
+            self.marked(),
+            c.c,c.d,
+            self.suffix(),
+        )
+    }
     pub fn print_error(&self) {
         let c = Koller::blue_bold();
         crate::error!(
