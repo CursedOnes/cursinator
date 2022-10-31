@@ -11,156 +11,239 @@ pub mod cmd;
 
 use std::path::PathBuf;
 
-use structopt::*;
+use clap::{Parser, Subcommand};
 
-#[derive(StructOpt)]
-#[structopt(name = "cursinator", about = "Download and manage CurseForge addons")]
+#[derive(Parser)]
+#[command(name = "cursinator", about = "Download and manage CurseForge addons")]
 pub struct Op {
-    #[structopt(short,long,default_value="repo.json",help="Path to repo json")]
+    /// Path to repo json
+    #[arg(short,long,default_value="repo.json")]
     pub conf: PathBuf,
-    #[structopt(short,long,help="spam stderr")]
+    /// spam stderr
+    #[arg(short,long)]
     pub verbose: bool,
-    #[structopt(short="n",long,help="Just print what would happen")]
+    /// Just print what would happen
+    #[arg(short='n',long)]
     pub noop: bool,
-    #[structopt(long,help="No queries to online api")]
+    /// No queries to online api
+    #[arg(long)]
     pub offline: bool, //TODO bork all API when offline mode
-    #[structopt(subcommand)]
+    #[command(subcommand)]
     pub cmd: OpCmd,
 }
-#[derive(StructOpt,Clone)]
+#[derive(Subcommand,Clone)]
 pub enum OpCmd {
-    #[structopt(about = "Initialize local mod repo")]
+    /// Initialize local mod repo
+    #[command()]
     Init {
-        #[structopt(short="g",long,help="gv")]
+        #[arg(short='g',long,help="gv")]
         game_version: Option<String>,
-        #[structopt(short="G",long,help="gv")]
+        #[arg(short='G',long,help="gv")]
         game_version_regex: Option<String>,
     },
-    #[structopt(about = "Search online for addon")]
+    /// Search online for addon
+    #[command()]
     Search {
-        #[structopt(short="p",long="page-size",default_value="0",help="# results (0=dynamic)")]
+        /// # results (0=dynamic)
+        #[arg(short='p',long="page-size",default_value="0")]
         page_size: u32,
-        #[structopt(short="n",long="page-n",default_value="0",help="page index")]
+        /// page index
+        #[arg(short='n',long="page-n",default_value="0")]
         page_n: u32,
-        #[structopt(help="addon")]
+        #[arg(help="addon")]
         addon: String,
     },
-    #[structopt(about = "Install addon")]
+    /// Install addon
+    #[command()]
     Install {
-        #[structopt(short,long,help="ignored if explicit version given")]
+        /// ignored if explicit version given
+        #[arg(short,long)]
         alpha: bool,
-        #[structopt(short,long,help="ignored if explicit version given")]
+        /// ignored if explicit version given
+        #[arg(short,long)]
         beta: bool,
-        #[structopt(short,long,help="ignored if explicit version given")]
+        /// ignored if explicit version given
+        #[arg(short,long)]
         release: bool,
-        #[structopt(short="f",long,help="Install even if incompatibility occurs")]
+        /// Install even if incompatibility occurs
+        #[arg(short='f',long)]
         force: bool,
-        #[structopt(short="x",long="version-blacklist",help="version blacklist")]
+        /// version blacklist
+        #[arg(short='x',long="version-blacklist")]
         version_blacklist: Option<String>,
-        #[structopt(help="Addon slug or id, with optional version specified")]
+        // Addon slug or id, with optional version specified, must be non-ambiguous
+        #[arg()]
         addons: Vec<String>,
     },
-    #[structopt(about = "Update addon")]
+    /// Update addon
+    #[command()]
     Update {
-        #[structopt(short,long,help="ignored if explicit version given, will override addon's channel, but won't change addon's channel")]
+        /// ignored if explicit version given, will override addon's channel, but won't change addon's channel
+        #[arg(short,long)]
         alpha: bool,
-        #[structopt(short,long,help="ignored if explicit version given, will override addon's channel, but won't change addon's channel")]
+        /// ignored if explicit version given, will override addon's channel, but won't change addon's channel
+        #[arg(short,long)]
         beta: bool,
-        #[structopt(short,long,help="ignored if explicit version given, will override addon's channel, but won't change addon's channel")]
+        /// ignored if explicit version given, will override addon's channel, but won't change addon's channel
+        #[arg(short,long)]
         release: bool,
-        #[structopt(short="f",long,help="Update even if incompatibility occurs")]
+        /// Update even if incompatibility occurs
+        #[arg(short='f',long)]
         force: bool,
-        #[structopt(short="d",long="allow-downgrade",help="Allow downgrade (explicit version install always allows downgrade)")]
+        /// Allow downgrade (explicit version install always allows downgrade)
+        #[arg(short='d',long="allow-downgrade")]
         allow_downgrade: bool,
-        #[structopt(help="slug")]
+        /// Addon slug, id or installed filename, must be non-ambiguous
+        #[arg()]
         addon: String, // if "list", do list -u
-        #[structopt(help="Explicit version")]
+        /// Optional: Install specific version of addon, implies allow_downgrade
+        #[arg()]
         file: Option<String>,
     },
-    #[structopt(name = "channel", about = "Set/Get release mode channel for addon", help = "Set/Get release mode channel for addon\n\nExample:\ncursinator channel iron-chests    | shows current channel\ncursinator channel iron-chests ba | set channel to ba\n\nChannel is denoted by the letters\n\nChannel examples:\nr = latest release\nb = latest beta-ish (beta/release)\na = latest alpha-ish\nrb = latest release, if no release available, fallback to latest beta-ish\nba = latest beta-ish, fallback to alpha\nrba (default) = latest release, fallback to beta or alpha\nra = release, fallback to alpha\nOrder doesn't matter: abr = arb = bar = rba")]
+    /// Set/Get release mode channel for addon
+    /// 
+    /// Example:
+    /// cursinator channel iron-chests    | shows current channel
+    /// cursinator channel iron-chests ba | set channel to ba
+    /// 
+    /// Channel is denoted by the letters
+    /// 
+    /// Channel examples:
+    /// r = latest release
+    /// b = latest beta-ish (beta/release)
+    /// a = latest alpha-ish
+    /// rb = latest release, if no release available, fallback to latest beta-ish
+    /// ba = latest beta-ish, fallback to alpha
+    /// rba (default) = latest release, fallback to beta or alpha
+    /// ra = release, fallback to alpha
+    /// Order doesn't matter: abr = arb = bar = rba
+    #[command(name = "channel", verbatim_doc_comment)]
     Channel {
-        #[structopt(help="addon")]
+        /// Addon slug, id or installed filename which channel should be changed, must be non-ambiguous
+        #[arg()]
         addon: String,
-        #[structopt(help="value or show channel")]
+        /// Show channel if not set, set channel if set
+        #[arg()]
         value: Option<String>,
     },
-    #[structopt(about = "List installed addons")]
+    /// List installed addons
+    #[command()]
     List {
         
     },
-    #[structopt(about = "List available updates or addon versions")]
+    /// List available updates or addon versions
+    /// 
+    /// Use -a/-b/-r to control which release types should be shown, if none of the three set, the r/b/a of addon's channel are implied
+    #[command()]
     Updates{
-        #[structopt(short,long,help="show alphas (except -b/-r and betas/releases available)")]
+        /// Show alphas, betas and releases (if -b or -r is also set and betas/releases are available, alphas/betas won't be shown)
+        #[arg(short,long)]
         alpha: bool,
-        #[structopt(short,long,help="show only betas and releases if betas are available (if -r and releases available, only releases will be shown)")]
+        /// show only betas and releases if betas or releases are available (if -r and releases available, only releases will be shown)
+        #[arg(short,long)]
         beta: bool,
-        #[structopt(short,long,help="show only releases if releases are available")]
+        /// show only releases if releases are available
+        #[arg(short,long)]
         release: bool,
-        #[structopt(short="s",long="show-all",help="also list addons without updates and don't omit versions")]
+        /// Also list addons without updates and don't omit versions
+        #[arg(short='s',long="show-all")]
         show_all: bool,
-        #[structopt(short="o",long="older",help="show older versions when listing versions of addon")]
+        /// Also show older versions when listing versions of addon
+        #[arg(short='o',long="older")]
         older: bool,
-        #[structopt(help="addon")]
+        /// Addon slug, id or installed filename for which updates should be shown, must be non-ambiguous
+        #[arg()]
         addon: Option<String>, //with addon just list available versions, this would fallback to list version of not installed addons (with query)
     },
-    #[structopt(name = "update-all",about="Update all addons")]
+    /// Update all addons
+    #[command(name = "update-all")]
     UpdateAll {
-        #[structopt(short,long)]
+        /// TODO
+        #[arg(short,long)]
         alpha: bool,
-        #[structopt(short,long)]
+        /// TODO
+        #[arg(short,long)]
         beta: bool,
-        #[structopt(short,long)]
+        /// TODO
+        #[arg(short,long)]
         release: bool,
     },
-    #[structopt(about="Remove addon")]
+    /// Remove addon. Use purge to also remove metadata/information/settings of the addobn
+    #[command()]
     Remove {
-        #[structopt(short="f",long,help="Remove even if dependents")]
+        /// Remove addon even if other addons depend on this addon
+        #[arg(short='f',long)]
         force: bool,
-        #[structopt(help="addon")]
+        /// Addon slug, id or installed filename which should be removed, must be non-ambiguous
+        #[arg()]
         addon: String,
     },
-    #[structopt(name = "autoremove",about="Remove addons which were installed as dependency")]
+    /// Remove addons which were installed as dependency
+    #[command(name = "autoremove")]
     AutoRemove {
-        #[structopt(short="p",long,help="Also purge information about addons removed in this operation")]
+        /// Also purge information about addons removed in this operation
+        #[arg(short='p',long)]
         purge: bool,
     },
-    #[structopt(about="Purge information about installed addons, can also be done on removed addons")]
+    /// Remove and purge information about installed addons, can also be done on removed addons
+    #[command()]
     Purge {
-        #[structopt(short="f",long,help="Remove even if dependents")]
+        /// Remove addon even if other addons depend on this addon
+        #[arg(short='f',long)]
         force: bool,
-        #[structopt(short="c",long,help="Only purge if already removed")]
+        /// Only purge if already removed
+        #[arg(short='c',long)]
         cleanup_only: bool,
-        #[structopt(help="addon")]
+        /// Addon slug, id or installed filename which should be purged, must be non-ambiguous
+        #[arg()]
         addon: String,
     },
-    #[structopt(name = "purge-removed",about="Purge information over all already removed addons")]
+    /// Purge information over all already removed addons
+    #[command(name = "purge-removed")]
     PurgeRemoved {
         
     },
-    #[structopt(about="Enable .disabled addon")]
+    /// Rename addon to .disabled
+    #[command()]
     Disable { //TODO check for dependent addons
-        #[structopt(help="addon")]
+        /// Disable addon even if other addons depend on this addon
+        #[arg(short='f',long)]
+        force: bool,
+        /// Also disable addons that depend on this addons recursively
+        #[arg(long="disable-depending")]
+        disable_depending: bool,
+        /// TODO
+        #[arg()]
         addon: String,
     },
-    #[structopt(about="rename addon to .disabled")]
+    /// Enable .disabled addon
+    #[command()]
     Enable {
-        #[structopt(help="addon")]
+        /// TODO
+        #[arg()]
         addon: String,
     },
-    #[structopt(about="Addon setting. Not all options exposed yet, refer repo.json")]
-    Aset{ //TODO move update_opt to separae option
-        #[structopt(help="addon")]
+    /// Addon setting. Not all options exposed yet, refer repo.json
+    #[command()]
+    Aset{ //TODO move update_opt to separat e option
+        /// Addon slug, id or installed filename, must be non-ambiguous
+        #[arg()]
         addon: String,
-        #[structopt(help="Show/Set specific setting, else list settings")]
+        /// Show/Set specific setting, else list settings
+        #[arg()]
         key: Option<String>,
-        #[structopt(help="Set setting, else show setting")]
+        /// Set setting, else show setting
+        #[arg()]
         value: Option<String>,
     },
-    #[structopt(about="Repo setting. Not all options exposed yet, refer repo.json")]
+    /// Repo setting. Not all options exposed yet, refer repo.json
+    #[command()]
     Rset{
-        #[structopt(help="Show/Set specific setting, else list settings")]
+        /// Show/Set specific setting, else list settings
+        #[arg()]
         key: Option<String>,
-        #[structopt(help="Set setting, else show setting")]
+        /// Set setting, else show setting
+        #[arg()]
         value: Option<String>,
     },
 }

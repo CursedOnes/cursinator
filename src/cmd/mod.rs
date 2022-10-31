@@ -76,7 +76,7 @@ pub fn main(o: Op) {
             purge::main(&o,&mut repo,force,cleanup_only,addon),
         OpCmd::PurgeRemoved {} => 
             purge_removed::main(&o,&mut repo),
-        OpCmd::Disable { addon } =>
+        OpCmd::Disable { addon, force, disable_depending } =>
             disable::main(&o,&mut repo,addon),
         OpCmd::Enable { addon } => 
             enable::main(&o,&mut repo,addon),

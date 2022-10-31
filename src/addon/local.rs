@@ -19,19 +19,19 @@ pub struct LocalAddon { //TODO defaults
 
 use rustc_hash::FxHashMap;
 use serde::de::{SeqAccess, Visitor};
-use structopt::*;
+use clap::Subcommand;
 
-#[derive(StructOpt,Clone,Copy)]
+#[derive(Subcommand,Clone,Copy)]
 #[derive(Deserialize,Serialize)]
 pub enum UpdateOpt {
-    /// update on implicit and update-all
-    #[structopt(about="Update on implicit and update-all")]
+    /// Update on implicit and update-all
+    #[command()]
     All,
-    /// update on implicit, but not on update-all
-    #[structopt(about="Update on implicit, but not on update-all")]
+    /// Update on implicit, but not on update-all
+    #[command()]
     Implicit,
-    /// only update on explicit
-    #[structopt(about="Only update on explicit")]
+    /// Only update on explicit
+    #[command()]
     Explicit,
 }
 

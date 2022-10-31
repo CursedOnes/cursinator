@@ -31,7 +31,7 @@ Install: ctm (CTM-MC1.16.1-1.1.2.6.jar)
 Write repo json
 
 user:mods$ # Install explicit file
-user:mods$ cursinator install silents-gems 3.7.10
+user:mods$ cursinator install silents-gems=3.7.10
 Install: silent-lib (silent-lib-1.16.3-4.9.6.jar)
 Install: silents-gems (SilentGems-1.16.3-3.7.10+113.jar)
 Write repo json

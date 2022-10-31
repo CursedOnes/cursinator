@@ -15,7 +15,7 @@ use crate::util::fs::Finalize;
 use anyhow::anyhow;
 use chrono::DateTime;
 use filetime::{FileTime, set_file_times};
-use sha1::Sha1;
+use sha1::{Sha1, Digest};
 use util::fs::remove_if;
 
 use super::files::AddonFile;
@@ -67,8 +67,12 @@ impl AddonFile {
             mod_file.write_all(&buf)?;
 
             // hash the downloaded data
-            let sha = Sha1::from(&buf).digest();
-            let sha_str = sha.to_string();
+            let sha = {
+                let mut hasher = Sha1::new();
+                hasher.update(&buf);
+                hasher.finalize()
+            };
+            let sha_str = hex::encode(&*sha);
 
             if let Some(sha1_hash) = &self.sha1_hash {
                 soft_assert!(sha_str == *sha1_hash, anyhow!("File Hash mismatch"), soft_error);

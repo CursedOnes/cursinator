@@ -1,6 +1,5 @@
+use clap::Parser;
 use cursinator::Op;
-
-use structopt::*;
 
 #[tokio::main] //TODO use reqwest::blocking in furse or rewrite to async
 async fn main() {
@@ -10,7 +9,7 @@ async fn main() {
 }
 
 fn with_args() {
-    let o = Op::from_args();
+    let o = Op::parse();
 
     cursinator::cmd::main(o)
 }
