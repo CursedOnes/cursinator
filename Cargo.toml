@@ -23,7 +23,7 @@ filetime = "0.2"
 chrono = "0.4"
 log = "0.4"
 env_logger = "0.9"
-termion = "1.5"
+termion = "2"
 rustc-hash = "1.1"
 regex = "1.4"
 furse = { git = "https://github.com/CursedOnes/furse", rev = "b18b02ef" }

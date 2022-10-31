@@ -56,7 +56,7 @@ fn match_key(s: &str) -> WhatRSet {
     ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
-        Err(e) if e.is_empty() => hard_error!("Not match for setting"),
+        Err(e) if e.is_empty() => hard_error!("No match for setting"),
         Err(e) => {
             error!("Ambiguous matches for setting");
             for m in e {

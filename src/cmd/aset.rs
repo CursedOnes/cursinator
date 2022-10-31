@@ -69,7 +69,7 @@ fn match_key(s: &str) -> WhatASet {
     ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
-        Err(e) if e.is_empty() => hard_error!("Not match for setting"),
+        Err(e) if e.is_empty() => hard_error!("No match for setting"),
         Err(e) => {
             error!("Ambiguous matches for setting");
             for m in e {
@@ -95,7 +95,7 @@ fn match_updateopt(s: &str) -> UpdateOpt {
     ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
-        Err(e) if e.is_empty() => hard_error!("Not match for UpdateOpt"),
+        Err(e) if e.is_empty() => hard_error!("No match for UpdateOpt"),
         Err(e) => {
             error!("Ambiguous matches for UpdateOpt");
             for m in e {

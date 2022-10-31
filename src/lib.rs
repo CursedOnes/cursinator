@@ -93,7 +93,7 @@ pub enum OpCmd {
         /// Allow downgrade (explicit version install always allows downgrade)
         #[arg(short='d',long="allow-downgrade")]
         allow_downgrade: bool,
-        /// Addon slug, id or installed filename, must be non-ambiguous
+        /// Match addon slug, id or installed filename, must be non-ambiguous
         #[arg()]
         addon: String, // if "list", do list -u
         /// Optional: Install specific version of addon, implies allow_downgrade
@@ -119,7 +119,7 @@ pub enum OpCmd {
     /// Order doesn't matter: abr = arb = bar = rba
     #[command(name = "channel", verbatim_doc_comment)]
     Channel {
-        /// Addon slug, id or installed filename which channel should be changed, must be non-ambiguous
+        /// Match addon slug, id or installed filename which channel should be changed, must be non-ambiguous
         #[arg()]
         addon: String,
         /// Show channel if not set, set channel if set
@@ -151,7 +151,7 @@ pub enum OpCmd {
         /// Also show older versions when listing versions of addon
         #[arg(short='o',long="older")]
         older: bool,
-        /// Addon slug, id or installed filename for which updates should be shown, must be non-ambiguous
+        /// Match addon slug, id or installed filename for which updates should be shown, must be non-ambiguous
         #[arg()]
         addon: Option<String>, //with addon just list available versions, this would fallback to list version of not installed addons (with query)
     },
@@ -174,7 +174,7 @@ pub enum OpCmd {
         /// Remove addon even if other addons depend on this addon
         #[arg(short='f',long)]
         force: bool,
-        /// Addon slug, id or installed filename which should be removed, must be non-ambiguous
+        /// Match addon slug, id or installed filename which should be removed, must be non-ambiguous
         #[arg()]
         addon: String,
     },
@@ -194,7 +194,7 @@ pub enum OpCmd {
         /// Only purge if already removed
         #[arg(short='c',long)]
         cleanup_only: bool,
-        /// Addon slug, id or installed filename which should be purged, must be non-ambiguous
+        /// Match addon slug, id or installed filename which should be purged, must be non-ambiguous
         #[arg()]
         addon: String,
     },
@@ -226,7 +226,7 @@ pub enum OpCmd {
     /// Addon setting. Not all options exposed yet, refer repo.json
     #[command()]
     Aset{ //TODO move update_opt to separat e option
-        /// Addon slug, id or installed filename, must be non-ambiguous
+        /// Match addon slug, id or installed filename, must be non-ambiguous
         #[arg()]
         addon: String,
         /// Show/Set specific setting, else list settings
