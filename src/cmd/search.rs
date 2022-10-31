@@ -13,7 +13,7 @@ pub fn main(
     addon: String,
 ) -> bool {
     if page_size == 0 {
-        page_size = term_h().saturating_sub(4).max(16) as u32;
+        page_size = term_h().saturating_sub(4).max(16).min(50) as u32;
     }
     let page_n = page_n as u64 * page_size as u64;
 

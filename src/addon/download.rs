@@ -7,7 +7,7 @@ use std::str::FromStr;
 use std::io::BufRead;
 use std::time::Duration;
 
-use crate::api::API;
+use crate::api::{API, parse_retry_duration};
 use crate::conf::Conf;
 use crate::*;
 use crate::util::fs::Finalize;
@@ -39,11 +39,19 @@ impl AddonFile {
             let mut buf = Vec::with_capacity(file_length);
             
             let resp = match api.http_get(&self.download_url.0) {
-                Err(e @ ureq::Error::Status(429, _)) => {
-                    error!("Retry download due to 429");
-                    soft_error = Some(e.into());
-                    std::thread::sleep(Duration::from_secs( 4u64.pow(retry_i.min(3)) ));
-                    continue;
+                Err(e) => {
+                    if let ureq::Error::Status(429, response) = &e {
+                        let wait_duration = parse_retry_duration(
+                            response.header("Retry-After"),
+                            4u64.pow(retry_i.min(3)),
+                        );
+                        error!("Too many requests, retry in {wait_duration} seconds");
+                        soft_error = Some(e.into());
+                        std::thread::sleep(Duration::from_secs( 4u64.pow(retry_i.min(3)) ));
+                        continue;
+                    } else {
+                        Err(e)
+                    }
                 }
                 v => v,
             }?;
@@ -218,5 +226,3 @@ macro_rules! try_from {
 fn parse_date() {
     NaiveDateTime::parse_from_str("2021-02-13T20:36:05.29Z","%Y-%m-%dT%H:%M:%S.%fZ").unwrap();
 }
-
-//TODO test murmur2

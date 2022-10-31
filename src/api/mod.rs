@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use crate::addon::release_type::ReleaseType;
 use crate::addon::{AddonID, AddonSlug, FileGameVersion, FileID, GameVersion};
@@ -53,21 +53,21 @@ impl API {
         dark_log!("API: Query Addon Info for {}",id.0);
 
         match self.handle_retry(|| block_on(self.furse.get_mod(id.0 as i32)) ) {
-            Ok(mod_info) => {
-                assert_eq!(id.0, mod_info.id as u64);
-                if mod_info.allow_mod_distribution != Some(true) {
-                    error!("Mod distribution not allowed: {}",mod_info.slug);
+            Ok(addon) => {
+                assert_eq!(id.0, addon.id as u64);
+                if addon.allow_mod_distribution != Some(true) {
+                    error!("Mod distribution not allowed: {}",addon.slug);
                     return Ok(None); //TODO handle undistributable mod error
                 }
                 Ok(Some(AddonInfo {
                     id,
-                    name: mod_info.name,
-                    slug: AddonSlug(mod_info.slug),
-                    summary: mod_info.summary,
-                    latest_files_indexes: mod_info.latest_files_indexes,
+                    name: addon.name,
+                    slug: AddonSlug(addon.slug),
+                    summary: addon.summary,
+                    latest_files_indexes: addon.latest_files_indexes,
                 }))
             },
-            Err(furse::Error::ReqwestError(rerr)) if rerr.status() == Some(reqwest::StatusCode::NOT_FOUND) => Ok(None),
+            Err(e) if e.is_response_status() == Some(reqwest::StatusCode::NOT_FOUND) => Ok(None),
             Err(e) => Err(e.into()),
         }
     }
@@ -88,16 +88,15 @@ impl API {
         loop {
             match (f)() {
                 Err(e) => {
-                    //TODO retrieve and handle Retry-After response
-                    let is_429 = {
-                        match &e {
-                            furse::Error::ReqwestError(e) if e.status() == Some(reqwest::StatusCode::TOO_MANY_REQUESTS) => true,
-                            _ => false,
-                        }
-                    };
-                    if is_429 {
-                        error!("Retry query due to 429");
-                        std::thread::sleep(Duration::from_secs( 4u64.pow(retry_i.min(3)) ));
+                    if e.is_response_status() == Some(reqwest::StatusCode::TOO_MANY_REQUESTS) {
+                        let wait_duration = parse_retry_duration(
+                            e.is_response()
+                                .and_then(|resp| resp.headers().get(reqwest::header::RETRY_AFTER) )
+                                .and_then(|retry| retry.to_str().ok() ),
+                            4u64.pow(retry_i.min(3)),
+                        );
+                        error!("Too many requests, retry in {wait_duration} seconds");
+                        std::thread::sleep(Duration::from_secs(wait_duration));
                         if retry_i < self.retry_count {
                             retry_i += 1;
                             continue;
@@ -134,4 +133,17 @@ impl AddonInfo {
             });
         max_release_type
     }
+}
+
+pub(crate) fn parse_retry_duration(retry_after: Option<&str>, fallback: u64) -> u64 {
+    if let Some(retry_after) = retry_after {
+        if let Ok(wait_until) = httpdate::parse_http_date(retry_after) {
+            if let Ok(wait_for) = wait_until.duration_since(SystemTime::now()) {
+                return wait_for.as_secs() + 1;
+            }
+        } else if let Ok(secs) = retry_after.parse() {
+            return secs;
+        }
+    }
+    fallback
 }

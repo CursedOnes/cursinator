@@ -166,6 +166,7 @@ dependencies = [
  "filetime",
  "furse",
  "futures",
+ "httpdate",
  "libc",
  "log",
  "regex",
@@ -287,8 +288,7 @@ dependencies = [
 [[package]]
 name = "furse"
 version = "1.5.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86b3b896b5ff07b64a4fe80e9d6f21fd046b381c9222b7f1678665765f751ef8"
+source = "git+https://github.com/CursedOnes/furse?rev=b18b02ef#b18b02ef66a3fa6ee76169df435558d9710a45b9"
 dependencies = [
  "chrono",
  "lazy_static",
@@ -296,6 +296,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_repr",
+ "serde_urlencoded",
  "thiserror",
  "url",
 ]

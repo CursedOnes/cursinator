@@ -20,7 +20,7 @@ impl API {
                 mod_files.sort_unstable_by_key(|mod_file| mod_file.id.0 );
                 FilesResult::Ok(mod_files)
             },
-            Err(furse::Error::ReqwestError(rerr)) if rerr.status() == Some(reqwest::StatusCode::NOT_FOUND) => FilesResult::NotFound,
+            Err(e) if e.is_response_status() == Some(reqwest::StatusCode::NOT_FOUND) => FilesResult::NotFound,
             Err(e) => FilesResult::Error(Rc::new(e.into())),
         }
     }
