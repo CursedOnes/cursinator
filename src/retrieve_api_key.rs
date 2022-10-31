@@ -4,17 +4,17 @@ use crate::conf::Conf;
 use crate::hard_error;
 
 pub fn cf_api_key(override_api_key: Option<Cow<'static,str>>) -> Cow<'static,str> {
-    let integrated_api_key = Some(env!("CURSEFORGE_API_KEY")); // Supply API key at compile time into the build
-    //let integrated_api_key = None; // Build without API key
+    let integrated_api_key = env!("CURSEFORGE_API_KEY"); // Supply API key at compile time into the build
+    //let integrated_api_key = ""; // Build without API key
 
-    //let integrated_api_key = Some(include_str!("../cf_test_key"));
+    //let integrated_api_key = include_str!("../cf_test_key");
 
-    if let Some(v) = override_api_key {
-        v
-    } else if let Ok(v) = std::env::var("CURSEFORGE_API_KEY") {
-        Cow::Owned(v)
-    } else if let Some(v) = integrated_api_key {
-        Cow::Borrowed(v)
+    if let Some(key) = override_api_key.filter(|key| !key.is_empty() ) {
+        key
+    } else if let Some(key) = std::env::var("CURSEFORGE_API_KEY").ok().filter(|key| !key.is_empty() ) {
+        Cow::Owned(key)
+    } else if !integrated_api_key.is_empty() {
+        Cow::Borrowed(integrated_api_key)
     } else {
         use termion::*;
 
