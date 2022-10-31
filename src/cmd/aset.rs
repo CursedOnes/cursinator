@@ -62,11 +62,11 @@ pub fn main(
 }
 
 fn match_key(s: &str) -> WhatASet {
-    let to_match = &[&[
+    let to_match = [&[
         (WhatASet::UpdateOpt,"update-opt"),
         (WhatASet::ManuallyInstalled,"manually-installed"),
         (WhatASet::VersionBlacklist,"version-blacklist"),
-    ][..]][..];
+    ][..]];
     match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("No match for setting"),
@@ -88,11 +88,11 @@ enum WhatASet {
 }
 
 fn match_updateopt(s: &str) -> UpdateOpt {
-    let to_match = &[&[
+    let to_match = [&[
         (UpdateOpt::All,"all"),
         (UpdateOpt::Explicit,"explicit"),
         (UpdateOpt::Implicit,"implicit"),
-    ][..]][..];
+    ][..]];
     match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("No match for UpdateOpt"),

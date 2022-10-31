@@ -106,14 +106,14 @@ pub fn release_type_from_flags(a: bool, b: bool, r: bool) -> Option<ReleaseType>
 }
 
 fn match_bool(s: &str, caption: &str) -> bool {
-    let to_match = &[&[
+    let to_match = [&[
         (false,"false"),
         (true,"true"),
         (false,"no"),
         (true,"yes"),
         (false,"0"),
         (true,"1"),
-    ][..]][..];
+    ][..]];
     match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("{} must be true/false/yes/no/0/1",caption),

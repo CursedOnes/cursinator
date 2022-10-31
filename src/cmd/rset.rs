@@ -49,11 +49,11 @@ pub fn main(
 }
 
 fn match_key(s: &str) -> WhatRSet {
-    let to_match = &[&[
+    let to_match = [&[
         (WhatRSet::UrlTxt,"url-txt"),
         (WhatRSet::AddonMtime,"addon-mtime"),
         (WhatRSet::SoftRetries,"soft-retries"),
-    ][..]][..];
+    ][..]];
     match match_str(s,to_match) {
         Ok(r) => r.z,
         Err(e) if e.is_empty() => hard_error!("No match for setting"),

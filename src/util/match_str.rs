@@ -36,7 +36,7 @@ pub fn find_installed_mod_by_key(s: &str, v: &LocalAddons, purge_mode: bool) -> 
         .map(|(z,v)| (z,cut_after_slash(v.file_name.trim())) )
         .collect();
 
-    match_str::match_str(s,&[&iter_slug,&iter_name,&iter_filename])
+    match_str::match_str(s,[&iter_slug,&iter_name,&iter_filename])
 }
 pub fn find_to_install_version_by_key<'a>(s: &str, v: &'a [AddonFile], game_version: &GameVersion) -> Result<Match<&'a AddonFile>,Vec<Match<&'a AddonFile>>> {
     if let Ok(i) = s.parse::<u64>() {
@@ -62,11 +62,11 @@ pub fn find_to_install_version_by_key<'a>(s: &str, v: &'a [AddonFile], game_vers
         .map(|v| (v,cut_after_slash(v.file_name.trim())) )
         .collect();
 
-    match_str::match_str(s,&[&iter_display_name,&iter_file_name])
+    match_str::match_str(s,[&iter_display_name,&iter_file_name])
 }
 
-pub fn match_str<Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
-    fn match_sub<Z>(s: &str, srcs: &[&[(Z,&str)]], f: impl Fn(&(Z,String))->Option<Match<Z>>) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
+pub fn match_str<Z,const N: usize>(s: &str, srcs: [&[(Z,&str)];N]) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
+    fn match_sub<Z,const N: usize>(s: &str, srcs: [&[(Z,&str)];N], f: impl Fn(&(Z,String))->Option<Match<Z>>) -> Result<Match<Z>,Vec<Match<Z>>> where Z: Clone {
         fn match_in<Z>(s: &str, src: &[(Z,String)], f: impl Fn(&(Z,String))->Option<Match<Z>>) -> Vec<Match<Z>> where Z: Clone {
             src.iter()
                 .filter_map(f)
@@ -77,15 +77,14 @@ pub fn match_str<Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<
         // 3. no spaces
         let s = s.trim();
 
-        let mut srcs: Vec<Vec<(Z,String)>> = srcs.iter()
+        let mut srcs: [Vec<(Z,String)>;N] = srcs
             .map(|s| 
                 s.iter()
                 .map(|(z,s)| (z.clone(),s.trim().to_owned()) )
                 .collect()
-            )
-            .collect();
+            );
 
-        for src in &srcs[..] {
+        for src in &srcs {
             let mut matches = match_in(s,src,&f);
             if matches.len() == 1 {return Ok(matches.swap_remove(0));}
             if matches.len() > 1 {return Err(matches);}
@@ -93,7 +92,7 @@ pub fn match_str<Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<
 
         let mut s = s.to_ascii_lowercase();
 
-        for src in &mut srcs[..] {
+        for src in &mut srcs {
             for s in src.iter_mut() {s.1.make_ascii_lowercase();}
 
             let mut matches = match_in(&s,src,&f);
@@ -103,7 +102,7 @@ pub fn match_str<Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<
 
         string_remove_1(&mut s);
 
-        for src in &mut srcs[..] {
+        for src in &mut srcs {
             for s in src.iter_mut() {string_remove_1(&mut s.1);}
 
             let mut matches = match_in(&s,src,&f);
@@ -113,7 +112,7 @@ pub fn match_str<Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<
 
         string_remove_2(&mut s);
 
-        for src in &mut srcs[..] {
+        for src in &mut srcs {
             for s in src.iter_mut() {string_remove_2(&mut s.1);}
 
             let mut matches = match_in(&s,src,&f);
@@ -123,7 +122,7 @@ pub fn match_str<Z>(s: &str, srcs: &[&[(Z,&str)]]) -> Result<Match<Z>,Vec<Match<
 
         string_remove_3(&mut s);
 
-        for src in &mut srcs[..] {
+        for src in &mut srcs {
             for s in src.iter_mut() {string_remove_3(&mut s.1);}
 
             let mut matches = match_in(&s,src,&f);
