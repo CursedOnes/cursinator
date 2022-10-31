@@ -6,14 +6,14 @@ use crate::print::term_h;
 
 pub fn main(
     _: &Op,
-    api: &API,
+    api: &mut API,
     repo: &Repo,
     mut page_size: u32,
     page_n: u32,
     addon: String,
 ) -> bool {
     if page_size == 0 {
-        page_size = term_h().saturating_sub(4).max(16) as u32;
+        page_size = term_h().saturating_sub(4).max(16).min(50) as u32;
     }
     let page_n = page_n as u64 * page_size as u64;
 

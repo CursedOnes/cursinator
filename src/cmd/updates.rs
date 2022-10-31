@@ -1,7 +1,7 @@
 use crate::addon::local::LocalAddon;
 use crate::op::update::{find_version_update, fix_discrepancy};
 use crate::print::addons::print_addon;
-use crate::{Op, error, hard_error};
+use crate::{Op, error, hard_error, unwrap_result_error};
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::api::files::FilesResult;
@@ -13,7 +13,7 @@ use crate::print::{Koller, term_w, term_h};
 
 pub fn main(
     _: &Op,
-    api: &API,
+    api: &mut API,
     repo: &Repo,
     rt: Option<ReleaseTypeMode>,
     show_all: bool,
@@ -21,7 +21,7 @@ pub fn main(
     addon: Option<String>,
 ) -> bool {
     if let Some(addon) = addon {
-        let addon_id = unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,false/*TODO true*/)).z;
+        let addon_id = unwrap_result_error!(unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,false/*TODO true*/))).z;
 
         let addon = &repo.addons.get(&addon_id).unwrap();
 

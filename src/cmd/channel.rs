@@ -1,4 +1,4 @@
-use crate::Op;
+use crate::{Op, unwrap_result_error};
 use crate::conf::Repo;
 use crate::op::channel::decode_channel;
 use crate::print::error::unwrap_match;
@@ -10,7 +10,7 @@ pub fn main(
     addon: String,
     value: Option<String>,
 ) -> bool {
-    let addon_id = unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,true)).z;
+    let addon_id = unwrap_result_error!(unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,true))).z;
 
     if let Some(value) = value {
         let new_channel = decode_channel(&value);

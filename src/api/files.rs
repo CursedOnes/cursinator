@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use futures::executor::block_on; //TODO use reqwest::blocking in furse or rewrite to async
 use rustc_hash::FxHashMap;
 
 use crate::addon::AddonID;
@@ -8,24 +9,23 @@ use crate::addon::files::AddonFile;
 use super::*;
 
 impl API {
-    pub fn files(&self, id: AddonID) -> FilesResult {
-        let url = format!("{domain}/addon/{id}/files",id=id.0,domain=self.domain);
-        let resp =
-        match self.http_get(&url) {
-            Ok(s) => s,
-            Err(ureq::Error::Status(404,_)) => return FilesResult::NotFound,
-            Err(e) => return FilesResult::Error(Rc::new(e.into())),
-        };
-        match resp.into_json::<Vec<AddonFile>>() {
-            Ok(mut v) => {
-                v.sort_unstable_by_key(|v| v.id.0 );
-                FilesResult::Ok(v)
+    pub fn files(&mut self, id: AddonID) -> FilesResult {
+        if self.offline {hard_error!("Offline mode")};
+
+        dark_log!("API: Query Addon Files for {}",id.0);
+
+        match handle_retry(|| block_on(self.furse.get_mut().get_mod_files(id.0 as i32)), self.retry_count) {
+            Ok(mod_files) => {
+                let mut mod_files: Vec<AddonFile> = mod_files.into_iter().map(Into::into).collect();
+                mod_files.sort_unstable_by_key(|mod_file| mod_file.id.0 );
+                FilesResult::Ok(mod_files)
             },
-            Err(e) => FilesResult::Error(Rc::new(e.into()))
+            Err(e) if e.is_response_status() == Some(reqwest::StatusCode::NOT_FOUND) => FilesResult::NotFound,
+            Err(e) => FilesResult::Error(Rc::new(e.into())),
         }
     }
 
-    pub fn files_cached(&self, id: AddonID, cache: &mut FxHashMap<AddonID,FilesResult>) -> FilesResult {
+    pub fn files_cached(&mut self, id: AddonID, cache: &mut FxHashMap<AddonID,FilesResult>) -> FilesResult {
         cache.entry(id)
             .or_insert_with(|| self.files(id) )
             .clone()

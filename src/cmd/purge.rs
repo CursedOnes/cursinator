@@ -12,7 +12,7 @@ pub fn main(
     cleanup_only: bool,
     addon: String,
 ) -> bool {
-    let addon_id = unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,true)).z;
+    let addon_id = unwrap_result_error!(unwrap_match(find_installed_mod_by_key(&addon,&repo.addons,true))).z;
 
     let dependents = has_dependents(addon_id, &repo.addons);
 

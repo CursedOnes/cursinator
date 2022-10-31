@@ -12,7 +12,7 @@ use crate::op::update::{find_version_update, fix_discrepancy};
 
 pub fn main(
     o: &Op,
-    api: &API,
+    api: &mut API,
     repo: &mut Repo,
     rt: Option<ReleaseTypeMode>,
 ) -> bool {

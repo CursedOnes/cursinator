@@ -8,7 +8,7 @@ use crate::api::files::FilesResult;
 
 pub fn collect_deps(
     installed: &LocalAddons,
-    api: &API,
+    api: &mut API,
     deps: impl Iterator<Item=AddonID>,
     game_version: &GameVersion,
     channel: ReleaseTypeMode,

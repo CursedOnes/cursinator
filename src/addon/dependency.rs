@@ -1,4 +1,7 @@
+use std::convert::TryInto;
 use std::ops::{Deref, DerefMut};
+
+use furse::structures::file_structs::{FileDependency, FileRelationType};
 
 use super::*;
 
@@ -43,6 +46,20 @@ impl Dependency {
             5 => Some(Self::Incompatible(id)),
             6 => Some(Self::Include(id)),
             _ => None,
+        }
+    }
+}
+
+impl From<FileDependency> for Dependency {
+    fn from(dep: FileDependency) -> Self {
+        let id = AddonID(dep.mod_id.try_into().unwrap());
+        match dep.relation_type {
+            FileRelationType::EmbeddedLibrary => Self::EmbeddedLibrary(id),
+            FileRelationType::OptionalDependency => Self::Optional(id),
+            FileRelationType::RequiredDependency => Self::Required(id),
+            FileRelationType::Tool => Self::Tool(id),
+            FileRelationType::Incompatible => Self::Incompatible(id),
+            FileRelationType::Include => Self::Include(id),
         }
     }
 }
@@ -104,6 +121,12 @@ impl Deref for Dependencies {
 impl DerefMut for Dependencies {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl From<Vec<FileDependency>> for Dependencies {
+    fn from(deps: Vec<FileDependency>) -> Self {
+        Self(deps.into_iter().map(Into::into).collect())
     }
 }
 

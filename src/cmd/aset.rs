@@ -4,7 +4,7 @@ use crate::addon::local::UpdateOpt;
 use crate::conf::Repo;
 use crate::util::match_str::find_installed_mod_by_key;
 use crate::print::error::unwrap_match;
-use crate::{Op, error, hard_error};
+use crate::{Op, error, hard_error, unwrap_result_error};
 use crate::util::match_str::match_str;
 use super::match_bool;
 
@@ -16,7 +16,7 @@ pub fn main(
     value: Option<String>
 ) -> bool {
     let addons = &mut repo.addons;
-    let addon_id = unwrap_match(find_installed_mod_by_key(&addon,addons,true)).z;
+    let addon_id = unwrap_result_error!(unwrap_match(find_installed_mod_by_key(&addon,addons,true))).z;
     let addon = addons.get_mut(&addon_id).unwrap();
 
     if let Some(key) = key {
@@ -69,7 +69,7 @@ fn match_key(s: &str) -> WhatASet {
     ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
-        Err(e) if e.is_empty() => hard_error!("Not match for setting"),
+        Err(e) if e.is_empty() => hard_error!("No match for setting"),
         Err(e) => {
             error!("Ambiguous matches for setting");
             for m in e {
@@ -95,7 +95,7 @@ fn match_updateopt(s: &str) -> UpdateOpt {
     ][..]][..];
     match match_str(s,to_match) {
         Ok(r) => r.z,
-        Err(e) if e.is_empty() => hard_error!("Not match for UpdateOpt"),
+        Err(e) if e.is_empty() => hard_error!("No match for UpdateOpt"),
         Err(e) => {
             error!("Ambiguous matches for UpdateOpt");
             for m in e {
@@ -113,6 +113,6 @@ impl Display for UpdateOpt {
             UpdateOpt::Implicit => "implicit",
             UpdateOpt::Explicit => "explicit",
         };
-        write!(f,"{}",v)
+        write!(f,"{v}")
     }
 }

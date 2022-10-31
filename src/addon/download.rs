@@ -5,22 +5,23 @@ use std::io::Write;
 use std::io::Read;
 use std::str::FromStr;
 use std::io::BufRead;
+use std::time::Duration;
 
-use crate::api::API;
+use crate::api::{API, parse_retry_duration};
 use crate::conf::Conf;
 use crate::*;
 use crate::util::fs::Finalize;
 
 use anyhow::anyhow;
-use chrono::NaiveDateTime;
+use chrono::DateTime;
 use filetime::{FileTime, set_file_times};
-use sha1::{Digest, Sha1};
+use sha1::{Sha1, Digest};
 use util::fs::remove_if;
 
 use super::files::AddonFile;
 
 impl AddonFile {
-    pub fn download(&self, conf: &Conf, api: &API) -> Result<DownloadFinalize,anyhow::Error> {
+    pub fn download(&self, conf: &Conf, api: &mut API) -> Result<DownloadFinalize,anyhow::Error> {
         let file_path = self.file_path();
         let url_txt_path = self.url_txt_path();
         let file_part_path = self.file_part_path();
@@ -30,14 +31,35 @@ impl AddonFile {
 
         let mut soft_error: Option<anyhow::Error> = None;
         // retries on soft-errors like hash mismatch
-        for _ in 0..conf.soft_retries.max(1) {
+        for retry_i in 0..conf.soft_retries.max(1) {
+            if let Some(soft_error) = &soft_error {
+                error!("Error: {soft_error}, retry download");
+            }
+
             let mut buf = Vec::with_capacity(file_length);
             
-            let resp = api.http_get(&self.download_url.0)?;
+            let resp = match api.http_get(&self.download_url.0) {
+                Err(e) => {
+                    if let ureq::Error::Status(429, response) = &e {
+                        let wait_duration = parse_retry_duration(
+                            response.header("Retry-After"),
+                            4u64.pow(retry_i.min(3)),
+                        );
+                        error!("Too many requests, retry in {wait_duration} seconds");
+                        soft_error = Some(e.into());
+                        std::thread::sleep(Duration::from_secs( 4u64.pow(retry_i.min(3)) ));
+                        continue;
+                    } else {
+                        Err(e)
+                    }
+                }
+                v => v,
+            }?;
+
             resp.into_reader().read_to_end(&mut buf)?;
 
             // verify size and murmur hash of downloaded data
-            soft_assert!(buf.len() == file_length, anyhow!("file_length mismatch"),soft_error);
+            soft_assert!(buf.len() == file_length, anyhow!("file_length mismatch"), soft_error);
             //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
 
             // write the downloaded data to mod.part
@@ -45,52 +67,31 @@ impl AddonFile {
             mod_file.write_all(&buf)?;
 
             // hash the downloaded data
-            let sha = Sha1::from(&buf).digest();
+            let sha = {
+                let mut hasher = Sha1::new();
+                hasher.update(&buf);
+                hasher.finalize()
+            };
+            let sha_str = hex::encode(&*sha);
+
+            if let Some(sha1_hash) = &self.sha1_hash {
+                soft_assert!(sha_str == *sha1_hash, anyhow!("File Hash mismatch"), soft_error);
+            }
 
             if conf.url_txt {
                 // write .url.txt.part with file url and SHA1 hash
                 let mut url_txt_file = file_write(&url_txt_part_path)?;
                 writeln!(url_txt_file,"{}",self.download_url.0.trim())?;
-                writeln!(url_txt_file,"{}",sha.to_string())?;
+                writeln!(url_txt_file,"{}",sha_str)?;
                 url_txt_file.flush()?;
             }
 
             mod_file.flush()?;
             drop(mod_file);
 
-            // verify size of written file
-            //let file_part_len: usize = try_from!(file_part_path.metadata()?.len(),anyhow!("file too big"));
-            //soft_assert!(file_part_len == buf.len(), anyhow!("local_file_length mismatch"),soft_error);
-
-            // read back file into buffer
-            let mut mod_file = file_read(&file_part_path)?;
-            soft_error!(mod_file.read_exact(&mut buf),soft_error);
-            drop(mod_file);
-
-            // hash-verify read-back data
-            //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
-            soft_assert!(Sha1::from(&buf).digest() == sha, anyhow!("sha mismatch"),soft_error);
-
-            if conf.url_txt {
-                // read back written .url.txt file and verify url and hash
-                let url_text = {
-                    let mut url_txt_file = file_read(&url_txt_part_path)?;
-                    let mut v = Vec::with_capacity(4096);
-                    url_txt_file.read_to_end(&mut v)?;
-                    v
-                };
-                let mut lines = url_text.lines();
-                let line_url = soft_optres!(lines.next(), anyhow!("akw"),soft_error);
-                let line_hash = soft_optres!(lines.next(), anyhow!("akw"),soft_error);
-
-                soft_assert!(line_url.trim() == self.download_url.0.trim(), anyhow!("url_text_url mismatch"),soft_error);
-                let sha2 = soft_result!(Digest::from_str(line_hash.trim()), anyhow!("url_text_hash mismatch"),soft_error);
-                soft_assert!(sha2 == sha, anyhow!("url_text_hash mismatch"),soft_error);
-            }
-
             if conf.addon_mtime {
                 // write addon publish time and current time to mtime and atime
-                if let Some(addon_time) = log_error!(NaiveDateTime::parse_from_str(&self.file_date, "%Y-%m-%dT%H:%M:%S.%fZ")) {
+                if let Some(addon_time) = log_error!(parse_date(&self.file_date)) {
                     let addon_time = FileTime::from_unix_time(addon_time.timestamp(),0);
                     let now = FileTime::now();
                     log_error!(set_file_times(&file_part_path, now, addon_time),   |e| "Failed to set file time: {}",e);
@@ -123,6 +124,10 @@ impl AddonFile {
     pub fn url_txt_part_path(&self) -> PathBuf {
         PathBuf::from(format!("{}.url.txt.part",self.file_name))
     }
+
+    pub fn is_downloaded(&self) -> bool {
+        self.file_path().is_file()
+    }
 }
 
 #[must_use]
@@ -143,69 +148,12 @@ fn file_write(p: impl AsRef<Path>) -> std::io::Result<File> {
         .write(true)
         .create(true)
         .truncate(true)
-        .custom_flags(libc::O_DIRECT)
         .open(p)
 }
 fn file_read(p: impl AsRef<Path>) -> std::io::Result<File> {
     OpenOptions::new()
         .read(true)
-        .custom_flags(libc::O_DIRECT)
         .open(p)
-}
-
-//TODO fix murmur32
-fn murmur32(buf: &[u8]) -> u32 {
-    murmur32_seed(buf,0)
-}
-
-//BROKEN
-fn murmur32_seed(mut buf: &[u8], seed: u32) -> u32 {
-    // stolen from smhasher: https://github.com/aappleby/smhasher/blob/61a0530f28277f2e850bfc39600ce61d02b518de/src/MurmurHash2.cpp#L37
-
-    // 'm' and 'r' are mixing constants generated offline.
-    // They're not really 'magic', they just happen to work well.
-
-    let m: u32 = 0x5bd1e995;
-    let r: u32= 24;
-
-    // Initialize the hash to a 'random' value
-
-    let mut h: u32 = seed ^ (buf.len() as u32);
-
-    // Mix 4 bytes at a time into the hash
-
-    while buf.len() >= 4 {
-        let mut k = u32::from_le_bytes([buf[0],buf[1],buf[2],buf[3]]);
-
-        k = k.overflowing_mul(m).0;
-        k ^= k >> r;
-        k = k.overflowing_mul(m).0;
-
-        h = h.overflowing_mul(m).0;
-        h ^= k;
-
-        buf = &buf[4..];
-    }
-
-    // Handle the last few bytes of the input array
-
-    match buf.len() {
-        3 => h ^= (buf[2] as u32) << 16,
-        2 => h ^= (buf[1] as u32) << 8,
-        1 => h ^= buf[0] as u32,
-        _ => {},
-    }
-
-    h = h.overflowing_mul(m).0;
-
-    // Do a few final mixes of the hash to ensure the last few
-    // bytes are well-incorporated.
-
-    h ^= h >> 13;
-    h = h.overflowing_mul(m).0;
-    h ^= h >> 15;
-
-    h
 }
 
 #[macro_export]
@@ -278,9 +226,19 @@ macro_rules! try_from {
     };
 }
 
-#[test]
-fn parse_date() {
-    NaiveDateTime::parse_from_str("2021-02-13T20:36:05.29Z","%Y-%m-%dT%H:%M:%S.%fZ").unwrap();
+fn parse_date(s: &str) -> Result<DateTime<chrono::FixedOffset>,chrono::ParseError> {
+    if let Ok(v) = DateTime::parse_from_rfc3339(s) {
+        return Ok(v);
+    }
+    //TODO properly handle cases like "0001-01-01T00:00:00"
+    if let Ok(v) = DateTime::parse_from_rfc3339(&format!("{s}Z")) {
+        return Ok(v);
+    }
+    chrono::DateTime::parse_from_rfc3339(s)
 }
 
-//TODO test murmur2
+#[test]
+fn parse_date_test() {
+    parse_date("2021-02-13T20:36:05Z").unwrap();
+    parse_date("2021-02-13T20:36:05Z").unwrap();
+}
