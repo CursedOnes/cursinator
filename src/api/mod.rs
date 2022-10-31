@@ -173,7 +173,7 @@ impl LazyFurse {
 
     pub fn get_mut(&mut self) -> &mut Furse {
         self.furse.get_or_insert_with(||{
-            let api_key = cf_api_key(self.override_api_key.clone().map(Cow::Owned));
+            let api_key = cf_api_key(self.override_api_key.as_deref().map(Cow::Borrowed));
             let api_key = api_key.trim();
             if api_key.len() != 60 {
                 hard_error!("CurseForge API key invalid, length must be 60, but is {}",api_key.len());

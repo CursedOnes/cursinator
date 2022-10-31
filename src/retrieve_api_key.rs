@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use crate::conf::Conf;
 use crate::hard_error;
 
-pub fn cf_api_key(override_api_key: Option<Cow<'static,str>>) -> Cow<'static,str> {
+pub fn cf_api_key<'a>(override_api_key: Option<Cow<'a,str>>) -> Cow<'a,str> {
     let integrated_api_key = env!("CURSEFORGE_API_KEY"); // Supply API key at compile time into the build
     //let integrated_api_key = ""; // Build without API key
 
