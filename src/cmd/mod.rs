@@ -23,6 +23,7 @@ pub mod disable;
 pub mod enable;
 pub mod search;
 pub mod download_all;
+pub mod fill_cf_manifest;
 
 pub fn main(o: Op) {
     if let OpCmd::Init { game_version, game_version_regex } = o.cmd.clone() {
