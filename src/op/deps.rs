@@ -1,9 +1,10 @@
+use anyhow::bail;
+
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::addon::{AddonID, GameVersion};
 use crate::addon::local::{LocalAddon, LocalAddons, UpdateOpt};
 use crate::api::API;
-use crate::hard_error;
-use crate::unwrap_or_error;
+use crate::unwrap_or_bail;
 use crate::api::files::FilesResult;
 
 pub fn collect_deps(
@@ -15,7 +16,7 @@ pub fn collect_deps(
     update_opt: UpdateOpt,
     version_blacklist: &Option<String>,
     install_queue: &mut Vec<LocalAddon>,
-) {
+) -> Result<(),anyhow::Error> {
     // version picking for deps:
     // 1. if explicit version for parent, filter to-install dep versions before specific date
     //for dep in 
@@ -38,20 +39,20 @@ pub fn collect_deps(
 
         let dep_info = match api.addon_info(dep_id) {
             Ok(Some(d)) => d,
-            Ok(None) => hard_error!("Dependency not available"),
-            Err(e) => hard_error!("Failed to fetch dependency: {}",e),
+            Ok(None) => bail!("Dependency not available"),
+            Err(e) => bail!("Failed to fetch dependency: {}",e),
         };
         let dep_files = match api.files(dep_id) {
             FilesResult::Ok(v) => v,
-            FilesResult::NotFound => hard_error!("Dependency not available"),
-            FilesResult::Error(e) => hard_error!("Failed to fetch dependency: {}",e),
+            FilesResult::NotFound => bail!("Dependency not available"),
+            FilesResult::Error(e) => bail!("Failed to fetch dependency: {}",e),
         };
 
         if !dep_files.iter().any(|v| game_version.matches(v.game_version.iter()) ) {
-            hard_error!("No version for current game version: {}",dep_info.slug);
+            bail!("No version for current game version: {}",dep_info.slug);
         }
 
-        let dep_file = unwrap_or_error!(
+        let dep_file = unwrap_or_bail!(
             z_channel.pick_version(
                 &dep_files,
                 game_version,
@@ -69,7 +70,7 @@ pub fn collect_deps(
             z_update_opt,
             &z_version_blacklist,
             install_queue,
-        );
+        )?;
 
         let new_dep = LocalAddon {
             id: dep_id,
@@ -84,4 +85,6 @@ pub fn collect_deps(
 
         install_queue.push(new_dep);
     }
+
+    Ok(())
 }

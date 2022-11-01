@@ -1,3 +1,5 @@
+use anyhow::{bail, anyhow};
+
 use crate::addon::{AddonID, AddonSlug};
 use crate::addon::files::AddonFile;
 use crate::addon::local::{LocalAddon, UpdateOpt};
@@ -6,7 +8,7 @@ use crate::api::API;
 use crate::conf::Repo;
 use super::deps::collect_deps;
 use super::incompat::*;
-use crate::{Op, error, warn, unwrap_result_error};
+use crate::{Op, error, warn};
 
 pub fn install_mod(
     // install this specific AddonFile
@@ -24,7 +26,7 @@ pub fn install_mod(
     o: &Op,
     api: &mut API,
     repo: &mut Repo,
-) -> bool {
+) -> Result<bool,anyhow::Error> {
     // if current mod installed, add to delete_sched
     // iterate required deps of to install file recursively and if not already installed, collect to install_sched, choose the latest version matching channel
     // - only deps that aren't installed are now installed
@@ -38,6 +40,7 @@ pub fn install_mod(
 
     let mut install_queue = vec![];
     let mut finalizer_queue = vec![];
+    let mut installed_queue = vec![];
 
     collect_deps(
         &repo.addons,
@@ -48,7 +51,7 @@ pub fn install_mod(
         update_opt,
         &version_blacklist,
         &mut install_queue,
-    );
+    )?;
 
     let incompat = check_incompatibility_3(
         &install_queue,
@@ -67,7 +70,7 @@ pub fn install_mod(
         }
 
         if !force_incompat {
-            std::process::exit(1);
+            bail!("Incompatible addons:{}",o.suffix());
         }
     }
 
@@ -89,13 +92,11 @@ pub fn install_mod(
         }
 
         if !o.noop {
-            let finalizer = unwrap_result_error!(
-                i.installed.as_ref().unwrap().download(&repo.conf,api),
-                |e|"Failed to install addon: {}",e
-            );
+            let finalizer = i.installed.as_ref().unwrap().download(&repo.conf,api)
+                .map_err(|e| anyhow!("Failed to install addon: {}",e))?;
+
             finalizer_queue.push(finalizer);
-            repo.addons.insert(i.id,i);
-            modified = true;
+            installed_queue.push((i.id,i));
         }
     }
 
@@ -106,16 +107,13 @@ pub fn install_mod(
         o.suffix()
     );
 
-    let mut set_new = None;
-
     if !o.noop {
-        let finalizer = unwrap_result_error!(
-            install.download(&repo.conf,api),
-            |e|"Failed to install addon: {}",e
-        );
+        let finalizer = install.download(&repo.conf,api)
+            .map_err(|e| anyhow!("Failed to install addon: {}",e))?;
+
         finalizer_queue.push(finalizer);
     
-        set_new = Some(LocalAddon {
+        installed_queue.push((addon_id,LocalAddon {
             id: addon_id,
             slug: i_slug,
             name: i_name,
@@ -124,7 +122,7 @@ pub fn install_mod(
             manually_installed,
             version_blacklist,
             installed: Some(install),
-        });
+        }));
     }
 
     if let Some(addon) = repo.addons.get_mut(&addon_id) {
@@ -135,21 +133,21 @@ pub fn install_mod(
                 o.suffix()
             );
             if !o.noop {
-                unwrap_result_error!(installed.remove(),|e|"Failed to remove addon: {}",e);
+                installed.remove().map_err(|e| anyhow!("Failed to remove addon: {}",e))?;
                 addon.installed = None;
                 modified = true;
             }
         }
     }
 
-    if let Some(new) = set_new {
-        repo.addons.insert(addon_id,new);
-        modified = true;
-    }
-
     for f in finalizer_queue {
         f.finalize();
     }
 
-    modified
+    for (id,i) in installed_queue {
+        repo.addons.insert(id,i);
+        modified = true;
+    }
+
+    Ok(modified)
 }

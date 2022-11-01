@@ -94,6 +94,15 @@ macro_rules! unwrap_or_error {
     };
 }
 #[macro_export]
+macro_rules! unwrap_or_bail {
+    ($oof:expr, $($arg:tt)* ) => {
+        match $oof {
+            Some(v) => v,
+            None => anyhow::bail!($($arg)*),
+        }
+    };
+}
+#[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {{
         let c = $crate::print::Koller::red_bold();

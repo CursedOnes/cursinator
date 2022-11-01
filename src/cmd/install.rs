@@ -68,7 +68,7 @@ pub fn main(
         }
     }
 
-    Ok(install_mod(
+    install_mod(
         addon_info.id,
         file.clone(),
         force,
@@ -81,7 +81,7 @@ pub fn main(
         o,
         api,
         repo,
-    ))
+    )
 }
 
 fn decode_name_version(mut mod_req: &str) -> Result<(String,Option<String>),anyhow::Error> {

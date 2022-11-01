@@ -73,7 +73,7 @@ pub fn main(
         }
 
         for (id,slug,name,channel,update_opt,manually_installed,version_blacklist,file) in queue {
-            repeat |= install_mod(
+            let result = install_mod(
                 id,
                 file,
                 false,
@@ -87,6 +87,12 @@ pub fn main(
                 api,
                 repo,
             );
+            
+            match result {
+                Ok(v) => repeat |= v,
+                Err(e) => error!("Error updating mod: {}",e),
+            }
+
             modified |= repeat;
         }
 

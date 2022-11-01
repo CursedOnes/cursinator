@@ -1,4 +1,4 @@
-use crate::{Op, unwrap_result_error};
+use crate::{Op, unwrap_result_error, log_error, error};
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::conf::Repo;
@@ -66,7 +66,7 @@ pub fn main(
         }
     }
 
-    install_mod(
+    let result = install_mod(
         addon.id,
         file.clone(),
         force,
@@ -79,5 +79,10 @@ pub fn main(
         o,
         api,
         repo,
-    )
+    );
+
+    match result {
+        Ok(v) => true,
+        Err(e) =>  {error!("Error updating mod: {}",e);false},
+    }
 }
