@@ -75,10 +75,10 @@ impl API {
         }
     }
 
-    pub fn addon_by_id_or_slug(&mut self, id: &AddonSlug) ->  anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
+    pub fn addon_by_id_or_slug(&mut self, id: &AddonSlug) ->  anyhow::Result<Option<AddonInfo>> {
         if let Ok(i) = id.0.trim().parse::<u64>() {
             match self.addon_info(AddonID(i)) {
-                Ok(Some(info)) => return Ok(Ok(info)),
+                Ok(Some(info)) => return Ok(Some(info)),
                 Ok(None) => {},
                 Err(e) => warn!("{}",e),
             }

@@ -5,7 +5,6 @@ use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::conf::Repo;
 use crate::addon::AddonSlug;
-use crate::print::error::unwrap_addon_info;
 use crate::hard_error;
 use crate::api::files::FilesResult;
 use crate::util::match_str::find_to_install_version_by_key;
@@ -33,7 +32,8 @@ pub fn main(
 
     let addon_info = //TODO detect if slug is a addon id
         match api.addon_by_id_or_slug(&slug) {
-            Ok(r) => unwrap_addon_info(r,&repo.conf.game_version,&repo.addons),
+            Ok(Some(r)) => r,
+            Ok(None) => bail!("No match for addon"),
             Err(e) => bail!("Failed to find addon: {}",e),
         };
 

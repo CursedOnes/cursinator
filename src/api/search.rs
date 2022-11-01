@@ -44,7 +44,7 @@ impl API {
         }
     }
 
-    pub fn search_slug(&mut self, slug: &AddonSlug) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
+    pub fn search_slug(&mut self, slug: &AddonSlug) -> anyhow::Result<Option<AddonInfo>> {
         anyhow::ensure!(!slug.0.is_empty(), "to-search slug cannot be empty");
 
         dark_log!("API: Search slug {}",slug.0);
@@ -67,7 +67,7 @@ impl API {
             v => v,
         }
     }
-    fn _search_slug(&mut self, slug: &AddonSlug, page_off: u64, page_size: u64) -> anyhow::Result<Result<AddonInfo,Vec<AddonInfo>>> {
+    fn _search_slug(&mut self, slug: &AddonSlug, page_off: u64, page_size: u64) -> anyhow::Result<Option<AddonInfo>> {
         let mut s = self.search_query(&SearchQuery {
             class_id: Some(6),
             slug: Some(slug.0.trim()),
@@ -79,8 +79,8 @@ impl API {
             .find(|(_,s)| &s.slug == slug )
             .map(|(i,_)| i );
         match i {
-            Some(i) => Ok(Ok(s.swap_remove(i))),
-            None => Ok(Err(s)),
+            Some(i) => Ok(Some(s.swap_remove(i))),
+            None => Ok(None),
         }
     }
 }
