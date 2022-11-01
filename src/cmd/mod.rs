@@ -22,6 +22,7 @@ pub mod purge_removed;
 pub mod disable;
 pub mod enable;
 pub mod search;
+pub mod download_all;
 
 pub fn main(o: Op) {
     if let OpCmd::Init { game_version, game_version_regex } = o.cmd.clone() {
@@ -68,6 +69,8 @@ pub fn main(o: Op) {
             updates::main(&o,&mut api,&repo,ReleaseTypeMode::new2(release,beta,alpha),show_all,older,addon),
         OpCmd::UpdateAll { alpha, beta, release } => 
             update_all::main(&o,&mut api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha)),
+        OpCmd::DownloadAll {} =>
+            download_all::main(&o,&mut api,&repo),
         OpCmd::Remove { force, addon } => 
             remove::main(&o,&mut repo,force,addon),
         OpCmd::AutoRemove { purge } => 

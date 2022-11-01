@@ -79,11 +79,7 @@ impl AddonFile {
             }
 
             if conf.url_txt {
-                // write .url.txt.part with file url and SHA1 hash
-                let mut url_txt_file = file_write(&url_txt_part_path)?;
-                writeln!(url_txt_file,"{}",self.download_url.0.trim())?;
-                writeln!(url_txt_file,"{}",sha_str)?;
-                url_txt_file.flush()?;
+                self.write_url_txt(conf, api, &sha_str)?.cancel_finalizer();
             }
 
             mod_file.flush()?;
@@ -105,6 +101,16 @@ impl AddonFile {
             });
         }
         Err(soft_error.unwrap())
+    }
+
+    pub fn write_url_txt(&self, conf: &Conf, api: &mut API, sha: &str) -> Result<Finalize,anyhow::Error> {
+        // write .url.txt.part with file url and SHA1 hash
+        let mut url_txt_file = file_write(self.url_txt_part_path())?;
+        writeln!(url_txt_file,"{}",self.download_url.0.trim())?;
+        writeln!(url_txt_file,"{}",sha)?;
+        url_txt_file.flush()?;
+
+        Ok(Finalize::new(self.url_txt_path(),self.url_txt_part_path(),false))
     }
 
     pub fn remove(&self) -> anyhow::Result<bool> {
@@ -132,8 +138,8 @@ impl AddonFile {
 
 #[must_use]
 pub struct DownloadFinalize {
-    file: Finalize,
-    url_txt: Finalize,
+    pub(super) file: Finalize,
+    pub(super) url_txt: Finalize,
 }
 
 impl DownloadFinalize {
@@ -143,14 +149,14 @@ impl DownloadFinalize {
     }
 }
 
-fn file_write(p: impl AsRef<Path>) -> std::io::Result<File> {
+pub(super) fn file_write(p: impl AsRef<Path>) -> std::io::Result<File> {
     OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
         .open(p)
 }
-fn file_read(p: impl AsRef<Path>) -> std::io::Result<File> {
+pub(super) fn file_read(p: impl AsRef<Path>) -> std::io::Result<File> {
     OpenOptions::new()
         .read(true)
         .open(p)

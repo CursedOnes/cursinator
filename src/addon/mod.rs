@@ -4,6 +4,7 @@ pub mod dependency;
 pub mod local;
 pub mod download;
 pub mod rtm;
+pub mod validate;
 
 use std::fmt::Display;
 
@@ -18,6 +19,14 @@ pub struct AddonID(pub u64);
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct AddonSlug(pub String);
+
+impl AddonSlug {
+    pub fn from_string_ref(s: &String) -> &Self {
+        unsafe {
+            std::mem::transmute::<&String,&Self>(s)
+        }
+    }
+}
 
 #[derive(Deserialize,Serialize,Copy,Clone,PartialEq,Eq,Hash)]
 #[serde(transparent)]

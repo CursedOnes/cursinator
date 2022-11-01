@@ -169,7 +169,12 @@ pub enum OpCmd {
         #[arg(short,long)]
         release: bool,
     },
-    /// Remove addon. Use purge to also remove metadata/information/settings of the addobn
+    /// Download all addons if not already downloaded or invalid
+    #[command(name = "download-all")]
+    DownloadAll {
+        
+    },
+    /// Remove addon. Use purge to also remove metadata/information/settings of the addon
     #[command()]
     Remove {
         /// Remove addon even if other addons depend on this addon

@@ -22,6 +22,10 @@ impl Finalize {
             self.finalized = true;
         }
     }
+
+    pub fn cancel_finalizer(mut self) {
+        self.finalized = true;
+    }
 }
 
 impl Drop for Finalize {
