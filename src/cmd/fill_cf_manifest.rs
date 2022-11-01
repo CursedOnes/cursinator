@@ -1,8 +1,30 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 use crate::addon::local::LocalAddon;
 use crate::conf::Repo;
-use crate::{error, warn};
+use crate::{error, warn, Op, unwrap_result_error};
+
+pub fn main(
+    _: &Op,
+    repo: &Repo,
+    input: PathBuf,
+    output: PathBuf,
+) -> bool {
+    let mut manifest: CfManifest = {
+        let template_json = unwrap_result_error!(std::fs::read(input), |e|"Failed to read template: {}",e);
+        unwrap_result_error!(serde_json::from_slice(&template_json), |e|"Failed to decode template: {}",e)
+    };
+
+    process(&mut manifest, repo);
+
+    let mut buf = Vec::with_capacity(1024*1024);
+    unwrap_result_error!(serde_json::to_writer_pretty(&mut buf, &manifest), |e|"Failed to encode manifest: {}",e);
+    unwrap_result_error!(std::fs::write(output,&buf), |e|"Failed to write manifest: {}",e);
+    
+    false
+}
 
 fn process(manifest: &mut CfManifest, repo: &Repo) {
     if manifest.manifest_version.as_i64() != Some(1) {
@@ -17,6 +39,8 @@ fn process(manifest: &mut CfManifest, repo: &Repo) {
 
     handle_entries_post(&mut manifest.files);
 
+    remaining_addons.sort_by_key(|addon| addon.id.0 );
+
     for addon in remaining_addons {
         manifest.files.push(CfMFile::auto_create(addon));
     }
@@ -25,12 +49,13 @@ fn process(manifest: &mut CfManifest, repo: &Repo) {
 #[derive(Deserialize,Serialize)]
 pub struct CfManifest {
     #[serde(rename = "manifestVersion")]
+    #[serde(default)]
     manifest_version: serde_json::Value,
-
-    files: Vec<CfMFile>,
 
     #[serde(flatten)]
     other: serde_json::Value,
+
+    files: Vec<CfMFile>,
 }
 
 #[derive(Deserialize,Serialize)]
@@ -49,13 +74,13 @@ pub struct CfMFile {
     #[serde(skip_serializing)]
     cursinator_slug: Option<String>,
 
+    #[serde(rename = "projectID")]
+    project_id: Option<u64>,
+
     #[serde(rename = "fileID")]
     file_id: Option<u64>,
 
     required: Option<bool>,
-
-    #[serde(rename = "projectID")]
-    project_id: Option<u64>,
 
     #[serde(flatten)]
     other: serde_json::Value,
@@ -77,11 +102,11 @@ impl CfMFile {
 
                 self.project_id = Some(addon.id.0);
 
-                if self.required.is_none() {
-                    self.required = Some(true);
-                }
                 if self.file_id.is_none() {
                     self.file_id = Some(addon.installed.as_ref().unwrap().id.0);
+                }
+                if self.required.is_none() {
+                    self.required = Some(true);
                 }
             } else {
                 error!("cursinator_slug not found: {slug}");
@@ -92,11 +117,11 @@ impl CfMFile {
                 let addon = remaining[idx];
                 remaining.swap_remove(idx);
 
-                if self.required.is_none() {
-                    self.required = Some(true);
-                }
                 if self.file_id.is_none() {
                     self.file_id = Some(addon.installed.as_ref().unwrap().id.0);
+                }
+                if self.required.is_none() {
+                    self.required = Some(true);
                 }
             } else {
                 error!("projectID not bound: {id}");
@@ -115,9 +140,9 @@ impl CfMFile {
             cursinator_ignore: true,
             cursinator_exclude: false,
             cursinator_slug: None,
+            project_id: Some(addon.id.0),
             file_id: Some(addon.installed.as_ref().unwrap().id.0),
             required: Some(true),
-            project_id: Some(addon.id.0),
             other: serde_json::Value::Object(serde_json::Map::new()),
         }
     }

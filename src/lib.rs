@@ -252,4 +252,14 @@ pub enum OpCmd {
         #[arg()]
         value: Option<String>,
     },
+    /// Generate CF manifest.json from template
+    #[command(name = "gen-cf-manifest")]
+    GenCfManifest {
+        /// Input template
+        #[arg()]
+        input: PathBuf,
+        /// Output manifest.json
+        #[arg()]
+        output: PathBuf,
+    },
 }
