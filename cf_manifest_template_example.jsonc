@@ -1,0 +1,30 @@
+{
+  "manifestVersion": 1,
+  "files": [
+    {
+      "cursinator_slug": "foamfix-optimization-mod", // Entry for addon by slug
+      "required": false
+      // cursinator will fill the fileID and other addon properties
+    },
+    {
+      "projectID": "12345",
+      "cursinator_exclude": true // Exclude this addon, the entire entry won't be in the generated manifest
+    },
+    {
+      "cursinator_slug": "debug-addon",
+      "cursinator_exclude": true // Exclude this addon, the entire entry won't be in the generated manifest
+    },
+    {
+      "cursinator_ignore": true, // cursinator won't touch this entry and keep it as-is (the "cursinator_*" fields won't be in the generated manifest)
+      "projectID": "32274",
+      "fileID": "4012858",
+      "required": true
+    },
+    {
+      "projectID": "220311" // Entry for addon by projectID
+      // cursinator will fill the fileID and other addon properties
+    },
+    // cursinator will fill in the remaining installed addons which weren't already specified or excluded above
+  ]
+}
+// see cf_manifest_template_example_result.json for a resulting manifest.json example
