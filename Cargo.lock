@@ -217,7 +217,7 @@ dependencies = [
  "rustc-hash",
  "serde",
  "serde_derive",
- "serde_json",
+ "serde_jsonrc",
  "sha1",
  "termion",
  "tokio",
@@ -1025,6 +1025,16 @@ name = "serde_json"
 version = "1.0.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce777b7b150d76b9cf60d28b55f5847135a003f7d7350c6be7a773508ce7d45"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
+]
+
+[[package]]
+name = "serde_jsonrc"
+version = "0.1.2"
+source = "git+https://github.com/qwertz19281/serde-jsonrc?rev=131ffb5f#131ffb5f54df275bf013fc33984296d35b89951a"
 dependencies = [
  "itoa",
  "ryu",

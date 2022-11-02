@@ -10,7 +10,7 @@ license = "MIT"
 [dependencies]
 serde = "1"
 serde_derive = "1"
-serde_json = "1"
+serde_jsonrc = { git = "https://github.com/qwertz19281/serde-jsonrc", rev = "131ffb5f" }
 clap = { version = "4", features = ["derive"] }
 ureq = { version = "2", features = ["json"] }
 anyhow = "1"
@@ -28,7 +28,7 @@ rustc-hash = "1.1"
 regex = "1.4"
 furse = { git = "https://github.com/CursedOnes/furse", rev = "b18b02ef" }
 futures = "0.3"
-reqwest = { version = "~0.11.12", default-features = false, features = [
+reqwest = { version = "0.11.12", default-features = false, features = [
     "json",
     "rustls-tls",
 ] } # TODO ability to use reqwest error codes in furse without also importing it as dependency

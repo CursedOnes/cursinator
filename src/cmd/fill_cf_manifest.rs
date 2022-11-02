@@ -14,13 +14,13 @@ pub fn main(
 ) -> bool {
     let mut manifest: CfManifest = {
         let template_json = unwrap_result_error!(std::fs::read(input), |e|"Failed to read template: {}",e);
-        unwrap_result_error!(serde_json::from_slice(&template_json), |e|"Failed to decode template: {}",e)
+        unwrap_result_error!(serde_jsonrc::from_slice(&template_json), |e|"Failed to decode template: {}",e)
     };
 
     process(&mut manifest, repo);
 
     let mut buf = Vec::with_capacity(1024*1024);
-    unwrap_result_error!(serde_json::to_writer_pretty(&mut buf, &manifest), |e|"Failed to encode manifest: {}",e);
+    unwrap_result_error!(serde_jsonrc::to_writer_pretty(&mut buf, &manifest), |e|"Failed to encode manifest: {}",e);
     unwrap_result_error!(std::fs::write(output,&buf), |e|"Failed to write manifest: {}",e);
     
     false
@@ -50,10 +50,10 @@ fn process(manifest: &mut CfManifest, repo: &Repo) {
 pub struct CfManifest {
     #[serde(rename = "manifestVersion")]
     #[serde(default)]
-    manifest_version: serde_json::Value,
+    manifest_version: serde_jsonrc::Value,
 
     #[serde(flatten)]
-    other: serde_json::Value,
+    other: serde_jsonrc::Value,
 
     files: Vec<CfMFile>,
 }
@@ -83,7 +83,7 @@ pub struct CfMFile {
     required: Option<bool>,
 
     #[serde(flatten)]
-    other: serde_json::Value,
+    other: serde_jsonrc::Value,
 }
 
 impl CfMFile {
@@ -143,7 +143,7 @@ impl CfMFile {
             project_id: Some(addon.id.0),
             file_id: Some(addon.installed.as_ref().unwrap().id.0),
             required: Some(true),
-            other: serde_json::Value::Object(serde_json::Map::new()),
+            other: serde_jsonrc::Value::Object(serde_jsonrc::Map::new()),
         }
     }
 }
