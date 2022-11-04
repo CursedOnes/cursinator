@@ -23,6 +23,7 @@ pub mod disable;
 pub mod enable;
 pub mod search;
 pub mod download_all;
+pub mod fill_cf_manifest;
 
 pub fn main(o: Op) {
     if let OpCmd::Init { game_version, game_version_regex } = o.cmd.clone() {
@@ -87,6 +88,8 @@ pub fn main(o: Op) {
             aset::main(&o,&mut repo,addon,key,value),
         OpCmd::Rset { key, value } => 
             rset::main(&o,&mut repo,key,value),
+        OpCmd::GenCfManifest { input, output } =>
+            fill_cf_manifest::main(&o, &repo, input, output),
     };
 
     if modified {

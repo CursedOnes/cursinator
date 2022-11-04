@@ -1,0 +1,25 @@
+{
+  "manifestVersion": 1,
+  "files": [
+    {
+      "projectID": "278494",
+      "fileID": "3973967",
+      "required": false
+    },
+    {
+      "projectID": "32274",
+      "fileID": "4012858",
+      "required": true
+    },
+    {
+      "projectID": "220311",
+      "fileID": "3169926",
+      "required": true
+    },
+    {
+      "projectID": "345678",
+      "fileID": "234567",
+      "required": true
+    }
+  ]
+}
