@@ -1,4 +1,5 @@
 use std::io::{Read, ErrorKind, BufRead};
+use std::path::Path;
 
 use sha1::{Sha1, Digest};
 
@@ -49,26 +50,9 @@ impl AddonFile {
         }
 
         if result.file_exist && self.file_length == file.metadata()?.len() {
-            let mut buf = vec![0u8;65536];
+            let sha = sha1_hash_file(file)?;
 
-            let mut mod_file = file_read(&file)?;
-            
-            let mut hasher = Sha1::new();
-
-            loop {
-                match mod_file.read(&mut buf) {
-                    Ok(0) => break,
-                    Ok(n) => {
-                        hasher.update(&buf[..n]);
-                    }
-                    Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
-                    Err(ref e) if e.kind() == ErrorKind::UnexpectedEof => break,
-                    Err(e) => return Err(e.into()),
-                }
-            }
-
-            let sha = hasher.finalize();
-            let sha_str = hex::encode(&*sha);
+            let sha_str = hex::encode(&sha);
 
             result.file_valid = &sha_str == file_hash.as_ref().unwrap();
         }
@@ -76,6 +60,23 @@ impl AddonFile {
         result.sha = file_hash.unwrap();
 
         Ok(result)
+    }
+
+    pub fn is_cached_valid(&self, paths: &FilePaths) -> Result<Option<String>,anyhow::Error> {
+        let metadata = paths.cache_path.metadata()?;
+
+        if self.file_length != metadata.len() {return Ok(None);}
+
+        let file_hash = match self.sha1_hash.as_ref() {
+            Some(v) => v,
+            None => return Ok(None),
+        };
+
+        let sha = sha1_hash_file(&paths.cache_path)?;
+
+        let sha_str = hex::encode(&sha);
+
+        Ok((&sha_str == file_hash).then(|| sha_str))
     }
 
     /// validate and re-download if not valid
@@ -94,6 +95,30 @@ impl AddonFile {
 
         Ok(())
     }
+}
+
+fn sha1_hash_file(file: impl AsRef<Path>) -> std::io::Result<[u8;20]> {
+    let mut buf = vec![0u8;65536];
+
+    let mut mod_file = file_read(&file)?;
+    
+    let mut hasher = Sha1::new();
+
+    loop {
+        match mod_file.read(&mut buf) {
+            Ok(0) => break,
+            Ok(n) => {
+                hasher.update(&buf[..n]);
+            }
+            Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
+            Err(ref e) if e.kind() == ErrorKind::UnexpectedEof => break,
+            Err(e) => return Err(e.into()),
+        }
+    }
+
+    let sha = hasher.finalize();
+
+    Ok(sha.into())
 }
 
 pub struct ValidateResult {

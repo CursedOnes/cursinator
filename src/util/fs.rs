@@ -126,13 +126,16 @@ pub fn create_guarded_symlink(src: impl AsRef<Path>, dest: PathBuf) -> anyhow::R
 
     let old_meta = dest.symlink_metadata();
     let did_link_exist = old_meta.is_ok();
-    let was_link_a_file = old_meta.as_ref().map_or(false, |meta| meta.is_file() || meta.is_symlink() );
 
-    if was_link_a_file {
-        std::fs::remove_file(&dest)?;
+    if src != dest {
+        let was_link_a_file = old_meta.as_ref().map_or(false, |meta| meta.is_file() || meta.is_symlink() );
+
+        if was_link_a_file {
+            std::fs::remove_file(&dest)?;
+        }
+
+        std::os::unix::fs::symlink(src, &dest)?;
     }
-
-    std::os::unix::fs::symlink(src, &dest)?;
 
     Ok(Finalize {
         finalize: None,

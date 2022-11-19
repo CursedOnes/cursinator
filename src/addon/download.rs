@@ -27,6 +27,13 @@ impl AddonFile {
 
         let file_length = try_from!(self.file_length,anyhow!("file too big"));
 
+        let mut validated = None;
+        
+        match self.is_cached_valid(paths) {
+            Ok(v) => validated = v,
+            Err(e) => warn!("{}",e),
+        }
+
         let mut soft_error: Option<anyhow::Error> = None;
         // retries on soft-errors like hash mismatch
         for retry_i in 0..conf.soft_retries.max(1) {
@@ -34,53 +41,50 @@ impl AddonFile {
                 error!("Error: {soft_error}, retry download");
             }
 
-            let mut buf = Vec::with_capacity(file_length);
-            
-            let resp = match api.http_get(&self.download_url.0) {
-                Err(e) => {
-                    if let ureq::Error::Status(429, response) = &e {
-                        let wait_duration = parse_retry_duration(
-                            response.header("Retry-After"),
-                            4u64.pow(retry_i.min(3)),
-                        );
-                        error!("Too many requests, retry in {wait_duration} seconds");
-                        soft_error = Some(e.into());
-                        std::thread::sleep(Duration::from_secs( 4u64.pow(retry_i.min(3)) ));
-                        continue;
-                    } else {
-                        Err(e)
+            if validated.is_none() {
+                let mut buf = Vec::with_capacity(file_length);
+                
+                let resp = match api.http_get(&self.download_url.0) {
+                    Err(e) => {
+                        if let ureq::Error::Status(429, response) = &e {
+                            let wait_duration = parse_retry_duration(
+                                response.header("Retry-After"),
+                                4u64.pow(retry_i.min(3)),
+                            );
+                            error!("Too many requests, retry in {wait_duration} seconds");
+                            soft_error = Some(e.into());
+                            std::thread::sleep(Duration::from_secs( 4u64.pow(retry_i.min(3)) ));
+                            continue;
+                        } else {
+                            Err(e)
+                        }
                     }
+                    v => v,
+                }?;
+
+                resp.into_reader().read_to_end(&mut buf)?;
+
+                // verify size and murmur hash of downloaded data
+                soft_assert!(buf.len() == file_length, anyhow!("file_length mismatch"), soft_error);
+                //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
+
+                // hash the downloaded data
+                let sha = {
+                    let mut hasher = Sha1::new();
+                    hasher.update(&buf);
+                    hasher.finalize()
+                };
+                let sha_str = hex::encode(&*sha);
+
+                if let Some(sha1_hash) = &self.sha1_hash {
+                    soft_assert!(sha_str == *sha1_hash, anyhow!("File Hash mismatch"), soft_error);
                 }
-                v => v,
-            }?;
 
-            resp.into_reader().read_to_end(&mut buf)?;
+                std::fs::write(&paths.cache_path, &buf)?;
 
-            // verify size and murmur hash of downloaded data
-            soft_assert!(buf.len() == file_length, anyhow!("file_length mismatch"), soft_error);
-            //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
-
-            // hash the downloaded data
-            let sha = {
-                let mut hasher = Sha1::new();
-                hasher.update(&buf);
-                hasher.finalize()
-            };
-            let sha_str = hex::encode(&*sha);
-
-            if let Some(sha1_hash) = &self.sha1_hash {
-                soft_assert!(sha_str == *sha1_hash, anyhow!("File Hash mismatch"), soft_error);
+                validated = Some(sha_str);
             }
-
-            //let did_exist = is_existing(&paths.cache_path);
-
-            // write the downloaded data to mod.part
-            let mut mod_file = file_write(&paths.cache_path)?;
-            mod_file.write_all(&buf)?;
-
-            mod_file.flush()?;
-            drop(mod_file);
-
+            
             if cache_only {
                 return Ok(Finalize::noop());
             }
@@ -88,7 +92,7 @@ impl AddonFile {
             let mut finalizer = create_guarded_symlink(&paths.cache_path, paths.path.clone())?;
 
             if conf.url_txt {
-                finalizer = finalizer + self.write_url_txt(paths, conf, api, &sha_str)?;
+                finalizer = finalizer + self.write_url_txt(paths, conf, api, validated.as_ref().unwrap())?;
             }
 
             if conf.addon_mtime {
