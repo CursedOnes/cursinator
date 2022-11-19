@@ -95,7 +95,7 @@ pub fn install_mod(
             let dep_to_install = i.installed.as_ref().unwrap();
 
             let dep_install_paths = dep_to_install.file_paths_new(
-                addon_id,
+                i.id,
                 false,
             );
 
