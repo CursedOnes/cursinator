@@ -231,7 +231,7 @@ pub enum OpCmd {
     },
     /// Addon setting. Not all options exposed yet, refer repo.json
     #[command()]
-    Aset{ //TODO move update_opt to separat e option
+    Aset{ //TODO move update_opt to separate option
         /// Match addon slug, id or installed filename, must be non-ambiguous
         #[arg()]
         addon: String,

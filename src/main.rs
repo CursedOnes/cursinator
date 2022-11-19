@@ -1,8 +1,7 @@
 use clap::Parser;
 use cursinator::Op;
 
-#[tokio::main] //TODO use reqwest::blocking in furse or rewrite to async
-async fn main() {
+fn main() {
     env_logger::init();
 
     with_args();

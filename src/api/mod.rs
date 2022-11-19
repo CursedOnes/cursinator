@@ -55,7 +55,7 @@ impl API {
 
         dark_log!("API: Query Addon Info for {}",id.0);
 
-        match handle_retry(|| block_on(self.furse.get_mut().get_mod(id.0 as i32)), self.retry_count) {
+        match handle_retry(|| self.furse.get_mut().get_mod(id.0 as i32), self.retry_count) {
             Ok(addon) => {
                 assert_eq!(id.0, addon.id as u64);
                 if addon.allow_mod_distribution != Some(true) {
@@ -70,7 +70,7 @@ impl API {
                     latest_files_indexes: addon.latest_files_indexes,
                 }))
             },
-            Err(e) if e.is_response_status() == Some(reqwest::StatusCode::NOT_FOUND) => Ok(None),
+            Err(e) if e.is_response_status() == Some(furse::reqwest::StatusCode::NOT_FOUND) => Ok(None),
             Err(e) => Err(e.into()),
         }
     }
@@ -92,10 +92,10 @@ fn handle_retry<T>(mut f: impl FnMut() -> Result<T,furse::Error>, retry_count: u
     loop {
         match (f)() {
             Err(e) => {
-                if e.is_response_status() == Some(reqwest::StatusCode::TOO_MANY_REQUESTS) {
+                if e.is_response_status() == Some(furse::reqwest::StatusCode::TOO_MANY_REQUESTS) {
                     let wait_duration = parse_retry_duration(
                         e.is_response()
-                            .and_then(|resp| resp.headers().get(reqwest::header::RETRY_AFTER) )
+                            .and_then(|resp| resp.headers().get(furse::reqwest::header::RETRY_AFTER) )
                             .and_then(|retry| retry.to_str().ok() ),
                         4u64.pow(retry_i.min(3)),
                     );

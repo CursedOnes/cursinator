@@ -24,7 +24,7 @@ impl API {
     pub fn search_query(&mut self, query: &SearchQuery) -> anyhow::Result<Vec<AddonInfo>> {
         if self.offline {hard_error!("Offline mode")};
 
-        match handle_retry(|| block_on(self.furse.get_mut().search_mods(&query)), self.retry_count) {
+        match handle_retry(|| self.furse.get_mut().search_mods(&query), self.retry_count) {
             Ok(mod_files) => {Ok(
                 mod_files.into_iter()
                     .filter(|addon| addon.allow_mod_distribution == Some(true) )
@@ -39,7 +39,7 @@ impl API {
                     })
                     .collect()
             )},
-            Err(e) if e.is_response_status() == Some(reqwest::StatusCode::NOT_FOUND) => panic!("Search returns 404"),
+            Err(e) if e.is_response_status() == Some(furse::reqwest::StatusCode::NOT_FOUND) => panic!("Search returns 404"),
             Err(e) => Err(e.into()),
         }
     }
