@@ -18,8 +18,10 @@ pub fn main(
             if !o.noop {
                 {
                     let addon = repo.addons.get_mut(&id).unwrap();
+                    let file = addon.installed.as_mut().unwrap();
+                    let paths = file.file_paths_current(id, !o.noop);
                     unwrap_result_error!(
-                        addon.installed.as_mut().unwrap().remove(),
+                        paths.remove(),
                         |e|"Failed to remove addon: {}",e
                     );
                     addon.installed = None;

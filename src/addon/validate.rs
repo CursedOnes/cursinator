@@ -7,24 +7,27 @@ use crate::api::API;
 use crate::conf::Conf;
 use crate::util::fs::Finalize;
 
+use super::download::FilePaths;
 use super::files::AddonFile;
 
 impl AddonFile {
-    pub fn validate(&self) -> Result<ValidateResult,anyhow::Error> {
+    pub fn validate(&self, paths: &FilePaths, cache_only: bool) -> Result<ValidateResult,anyhow::Error> {
+        let file = if cache_only {&paths.cache_path} else {&paths.path};
+
         let mut result = ValidateResult {
             sha: String::new(),
-            file_exist: self.file_path().is_file(),
+            file_exist: file.is_file(),
             file_valid: false,
-            urltxt_exist: self.url_txt_path().is_file(),
+            urltxt_exist: paths.url_txt_path.is_file(),
             urltxt_valid: false,
         };
 
         let mut file_hash = self.sha1_hash.clone();
 
-        if result.urltxt_exist {
+        if result.urltxt_exist && !cache_only {
             // read back written .url.txt file and verify url and hash
             let url_text = {
-                let mut url_txt_file = file_read(self.url_txt_path())?;
+                let mut url_txt_file = file_read(&paths.url_txt_path)?;
                 let mut v = Vec::with_capacity(4096);
                 url_txt_file.read_to_end(&mut v)?;
                 v
@@ -45,10 +48,10 @@ impl AddonFile {
             file_hash = Some(String::new());
         }
 
-        if result.file_exist && self.file_length == self.file_path().metadata()?.len() {
+        if result.file_exist && self.file_length == file.metadata()?.len() {
             let mut buf = vec![0u8;65536];
 
-            let mut mod_file = file_read(self.file_path())?;
+            let mut mod_file = file_read(&file)?;
             
             let mut hasher = Sha1::new();
 
@@ -76,14 +79,16 @@ impl AddonFile {
     }
 
     /// validate and re-download if not valid
-    pub fn validate_download(&self, conf: &Conf, api: &mut API, fin: &mut Vec<Finalize>) -> Result<(),anyhow::Error> {
-        let validation = self.validate()?;
+    pub fn validate_download(&self, paths: &FilePaths, conf: &Conf, api: &mut API, fin: &mut Vec<Finalize>, cache_only: bool) -> Result<(),anyhow::Error> {
+        paths.ensure_path_dir()?;
+        
+        let validation = self.validate(paths, cache_only)?;
 
         if !validation.file_valid {
-            let finalization = self.download(conf, api)?;
-            fin.extend([finalization.file,finalization.url_txt]);
-        } else if conf.url_txt && !validation.urltxt_valid {
-            let finalizer = self.write_url_txt(conf, api, &validation.sha)?;
+            let finalization = self.download(paths, conf, api, cache_only)?;
+            fin.push(finalization);
+        } else if conf.url_txt && !validation.urltxt_valid && !cache_only {
+            let finalizer = self.write_url_txt(paths, conf, api, &validation.sha)?;
             fin.push(finalizer);
         }
 

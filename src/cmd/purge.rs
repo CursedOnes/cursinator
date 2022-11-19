@@ -52,8 +52,9 @@ pub fn main(
         if !o.noop {
             let addon = repo.addons.get_mut(&addon_id).unwrap();
             if let Some(installed) = addon.installed.as_mut() {
+                let paths = installed.file_paths_current(addon_id, !o.noop);
                 unwrap_result_error!(
-                    installed.remove(),
+                    paths.remove(),
                     |e|"Failed to purge addon: {}",e
                 );
                 addon.installed = None;

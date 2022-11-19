@@ -70,8 +70,8 @@ pub fn main(o: Op) {
             updates::main(&o,&mut api,&repo,ReleaseTypeMode::new2(release,beta,alpha),show_all,older,addon),
         OpCmd::UpdateAll { alpha, beta, release } => 
             update_all::main(&o,&mut api,&mut repo,ReleaseTypeMode::new2(release,beta,alpha)),
-        OpCmd::DownloadAll {} =>
-            download_all::main(&o,&mut api,&repo),
+        OpCmd::DownloadAll { cache_only } =>
+            download_all::main(&o,&mut api,&repo,cache_only),
         OpCmd::Remove { force, addon } => 
             remove::main(&o,&mut repo,force,addon),
         OpCmd::AutoRemove { purge } => 
@@ -80,10 +80,10 @@ pub fn main(o: Op) {
             purge::main(&o,&mut repo,force,cleanup_only,addon),
         OpCmd::PurgeRemoved {} => 
             purge_removed::main(&o,&mut repo),
-        OpCmd::Disable { addon, force, disable_depending } =>
-            disable::main(&o,&mut repo,addon),
-        OpCmd::Enable { addon } => 
-            enable::main(&o,&mut repo,addon),
+        // OpCmd::Disable { addon, force, disable_depending } =>
+        //     disable::main(&o,&mut repo,addon),
+        // OpCmd::Enable { addon } => 
+        //     enable::main(&o,&mut repo,addon),
         OpCmd::Aset { addon, key, value } => 
             aset::main(&o,&mut repo,addon,key,value),
         OpCmd::Rset { key, value } => 

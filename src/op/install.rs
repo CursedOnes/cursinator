@@ -8,7 +8,7 @@ use crate::api::API;
 use crate::conf::Repo;
 use super::deps::collect_deps;
 use super::incompat::*;
-use crate::{Op, error, warn};
+use crate::{Op, error, warn, log_error};
 
 pub fn install_mod(
     // install this specific AddonFile
@@ -92,8 +92,15 @@ pub fn install_mod(
         }
 
         if !o.noop {
-            let finalizer = i.installed.as_ref().unwrap().download(&repo.conf,api)
-                .map_err(|e| anyhow!("Failed to install addon: {}",e))?;
+            let dep_to_install = i.installed.as_ref().unwrap();
+
+            let dep_install_paths = dep_to_install.file_paths_new(
+                addon_id,
+                false,
+            );
+
+            let finalizer = dep_to_install.download(&dep_install_paths, &repo.conf, api, false)
+                .map_err(|e| anyhow!("Failed to install dependency addon: {}",e))?;
 
             finalizer_queue.push(finalizer);
             installed_queue.push((i.id,i));
@@ -107,8 +114,19 @@ pub fn install_mod(
         o.suffix()
     );
 
+    let prev_paths = repo.addons.get(&addon_id)
+        .and_then(|a| a.installed.as_ref() )
+        .map(|f| f.file_paths_current(addon_id, !o.noop) );
+
+    let mut installed_paths = None;
+
     if !o.noop {
-        let finalizer = install.download(&repo.conf,api)
+        let install_paths = install.file_paths_new(
+            addon_id,
+            prev_paths.as_ref().map_or(false, |prev| prev.disabled)
+        );
+
+        let finalizer = install.download(&install_paths, &repo.conf, api, false)
             .map_err(|e| anyhow!("Failed to install addon: {}",e))?;
 
         finalizer_queue.push(finalizer);
@@ -123,18 +141,22 @@ pub fn install_mod(
             version_blacklist,
             installed: Some(install),
         }));
+
+        installed_paths = Some(install_paths);
     }
 
-    if let Some(addon) = repo.addons.get_mut(&addon_id) {
-        if let Some(installed) = &mut addon.installed {
-            eprintln!(
-                "Remove previous version: {}{}",
-                installed.file_name,
-                o.suffix()
-            );
+    if let Some(installed_paths) = installed_paths {
+        if let Some(prev_paths) = prev_paths {
+            if installed_paths.path != prev_paths.path {
+                eprintln!(
+                    "Remove previous version: {}{}",
+                    prev_paths.path.to_string_lossy(),
+                    o.suffix()
+                );
+            }
             if !o.noop {
-                installed.remove().map_err(|e| anyhow!("Failed to remove addon: {}",e))?;
-                addon.installed = None;
+                log_error!(prev_paths.remove_if_not_new(&installed_paths), |e| "Failed to remove addon: {}",e);
+                //addon.installed = None; //at that point, the entire install fn succeeded
                 modified = true;
             }
         }

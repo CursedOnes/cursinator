@@ -5,16 +5,20 @@ use crate::conf::Repo;
 use crate::error;
 
 pub fn main(
-    _: &Op,
+    o: &Op,
     api: &mut API,
     repo: &Repo,
+    cache_only: bool,
 ) -> bool {
     let mut finalizers: Vec<Finalize> = vec![];
 
-    for addon_file in repo.addons.iter().filter_map(|addon| addon.1.installed.as_ref() ) {
-        match addon_file.validate_download(&repo.conf, api, &mut finalizers) {
-            Ok(_) => finalizers.drain(..).for_each(Finalize::finalize),
-            Err(e) => error!("Failed to download addon: {}",e),
+    for (&addon_id,addon) in repo.addons.iter() {
+        if let Some(addon_file) = addon.installed.as_ref() {
+            let paths = addon_file.file_paths_current(addon_id, !o.noop);
+            match addon_file.validate_download(&paths, &repo.conf, api, &mut finalizers, cache_only) {
+                Ok(_) => finalizers.drain(..).for_each(Finalize::finalize),
+                Err(e) => error!("Failed to download addon: {}",e),
+            }
         }
     }
 

@@ -172,7 +172,9 @@ pub enum OpCmd {
     /// Download all addons if not already downloaded or invalid
     #[command(name = "download-all")]
     DownloadAll {
-        
+        /// Only fill cache
+        #[arg(short,long)]
+        cache_only: bool,
     },
     /// Remove addon. Use purge to also remove metadata/information/settings of the addon
     #[command()]
@@ -209,26 +211,26 @@ pub enum OpCmd {
     PurgeRemoved {
         
     },
-    /// Rename addon to .disabled
-    #[command()]
-    Disable { //TODO check for dependent addons
-        /// Disable addon even if other addons depend on this addon
-        #[arg(short='f',long)]
-        force: bool,
-        /// Also disable addons that depend on this addons recursively
-        #[arg(long="disable-depending")]
-        disable_depending: bool,
-        /// TODO
-        #[arg()]
-        addon: String,
-    },
-    /// Enable .disabled addon
-    #[command()]
-    Enable {
-        /// TODO
-        #[arg()]
-        addon: String,
-    },
+    // /// Rename addon to .disabled
+    // #[command()]
+    // Disable { //TODO check for dependent addons
+    //     /// Disable addon even if other addons depend on this addon
+    //     #[arg(short='f',long)]
+    //     force: bool,
+    //     /// Also disable addons that depend on this addons recursively
+    //     #[arg(long="disable-depending")]
+    //     disable_depending: bool,
+    //     /// TODO
+    //     #[arg()]
+    //     addon: String,
+    // },
+    // /// Enable .disabled addon
+    // #[command()]
+    // Enable {
+    //     /// TODO
+    //     #[arg()]
+    //     addon: String,
+    // },
     /// Addon setting. Not all options exposed yet, refer repo.json
     #[command()]
     Aset{ //TODO move update_opt to separate option

@@ -10,22 +10,20 @@ use std::time::Duration;
 use crate::api::{API, parse_retry_duration};
 use crate::conf::Conf;
 use crate::*;
-use crate::util::fs::Finalize;
+use crate::util::fs::{Finalize, is_existing, is_file_or_symlink, create_guarded_symlink};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use chrono::DateTime;
 use filetime::{FileTime, set_file_times};
 use sha1::{Sha1, Digest};
 use util::fs::remove_if;
 
+use super::AddonID;
 use super::files::AddonFile;
 
 impl AddonFile {
-    pub fn download(&self, conf: &Conf, api: &mut API) -> Result<DownloadFinalize,anyhow::Error> {
-        let file_path = self.file_path();
-        let url_txt_path = self.url_txt_path();
-        let file_part_path = self.file_part_path();
-        let url_txt_part_path = self.url_txt_part_path();
+    pub fn download(&self, paths: &FilePaths, conf: &Conf, api: &mut API, cache_only: bool) -> Result<Finalize,anyhow::Error> {
+        paths.ensure_path_dir()?;
 
         let file_length = try_from!(self.file_length,anyhow!("file too big"));
 
@@ -62,10 +60,6 @@ impl AddonFile {
             soft_assert!(buf.len() == file_length, anyhow!("file_length mismatch"), soft_error);
             //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
 
-            // write the downloaded data to mod.part
-            let mut mod_file = file_write(&file_part_path)?;
-            mod_file.write_all(&buf)?;
-
             // hash the downloaded data
             let sha = {
                 let mut hasher = Sha1::new();
@@ -78,74 +72,201 @@ impl AddonFile {
                 soft_assert!(sha_str == *sha1_hash, anyhow!("File Hash mismatch"), soft_error);
             }
 
-            if conf.url_txt {
-                self.write_url_txt(conf, api, &sha_str)?.cancel_finalizer();
-            }
+            //let did_exist = is_existing(&paths.cache_path);
+
+            // write the downloaded data to mod.part
+            let mut mod_file = file_write(&paths.cache_path)?;
+            mod_file.write_all(&buf)?;
 
             mod_file.flush()?;
             drop(mod_file);
+
+            if cache_only {
+                return Ok(Finalize::noop());
+            }
+
+            let mut finalizer = create_guarded_symlink(&paths.cache_path, paths.path.clone())?;
+
+            if conf.url_txt {
+                finalizer = finalizer + self.write_url_txt(paths, conf, api, &sha_str)?;
+            }
 
             if conf.addon_mtime {
                 // write addon publish time and current time to mtime and atime
                 if let Some(addon_time) = log_error!(parse_date(&self.file_date)) {
                     let addon_time = FileTime::from_unix_time(addon_time.timestamp(),0);
                     let now = FileTime::now();
-                    log_error!(set_file_times(&file_part_path, now, addon_time),   |e| "Failed to set file time: {}",e);
-                    log_error!(set_file_times(&url_txt_part_path, now, addon_time),|e| "Failed to set file time: {}",e);
+                    log_error!(set_file_times(&paths.cache_path, now, addon_time),   |e| "Failed to set file time: {}",e);
+                    log_error!(set_file_times(&paths.path, now, addon_time),   |e| "Failed to set file time: {}",e);
+                    log_error!(set_file_times(&paths.url_txt_path, now, addon_time),|e| "Failed to set file time: {}",e);
                 }
             }
 
-            return Ok(DownloadFinalize{
-                file: Finalize::new(file_path,file_part_path,false),
-                url_txt: Finalize::new(url_txt_path,url_txt_part_path,!conf.url_txt),
-            });
+            return Ok(finalizer);
         }
         Err(soft_error.unwrap())
     }
 
-    pub fn write_url_txt(&self, conf: &Conf, api: &mut API, sha: &str) -> Result<Finalize,anyhow::Error> {
+    pub fn write_url_txt(&self, paths: &FilePaths, conf: &Conf, api: &mut API, sha: &str) -> Result<Finalize,anyhow::Error> {
         // write .url.txt.part with file url and SHA1 hash
-        let mut url_txt_file = file_write(self.url_txt_part_path())?;
-        writeln!(url_txt_file,"{}",self.download_url.0.trim())?;
-        writeln!(url_txt_file,"{}",sha)?;
-        url_txt_file.flush()?;
+        let mut url_txt = vec![];
 
-        Ok(Finalize::new(self.url_txt_path(),self.url_txt_part_path(),false))
+        writeln!(&mut url_txt,"{}",self.download_url.0.trim())?;
+        writeln!(&mut url_txt,"{}",sha)?;
+
+        let did_it_exist = is_existing(&paths.url_txt_path);
+
+        std::fs::write(&paths.url_txt_path, url_txt)?;
+
+        Ok(Finalize::guard_file(paths.url_txt_path.clone(), did_it_exist))
     }
 
+    pub fn file_paths_part_new(&self, disabled: bool) -> FilePathsPart {
+        if disabled {
+            FilePathsPart {
+                path: PathBuf::from(format!("{}.disabled",self.file_name)),
+                url_txt_path: PathBuf::from(format!("{}.disabled.url.txt",self.file_name)),
+                disabled,
+            }
+        } else {
+            FilePathsPart {
+                path: PathBuf::from(&self.file_name),
+                url_txt_path: PathBuf::from(format!("{}.url.txt",self.file_name)),
+                disabled,
+            }
+        }
+    }
+
+    pub fn file_paths_part_current(&self, allow_fixups: bool) -> FilePathsPart {
+        let disabled_path = PathBuf::from(format!("{}.disabled",self.file_name));
+        let path = PathBuf::from(&self.file_name);
+        let disabled_url_txt = PathBuf::from(format!("{}.disabled.url.txt",self.file_name));
+        let url_txt = PathBuf::from(format!("{}.url.txt",self.file_name));
+
+        let disabled = !is_existing(&path) && is_file_or_symlink(&disabled_path);
+        
+        // sync url.txt disabled status to file
+        if disabled {
+            if !is_existing(&disabled_url_txt) && is_file_or_symlink(&url_txt) {
+                if allow_fixups {
+                    log_error!(std::fs::rename(&url_txt, &disabled_url_txt));
+                }
+            }
+        } else {
+            if !is_existing(&url_txt) && is_file_or_symlink(&disabled_url_txt) {
+                if allow_fixups {
+                    log_error!(std::fs::rename(&disabled_url_txt, &url_txt));
+                }
+            }
+        }
+
+        if disabled {
+            FilePathsPart {
+                path: disabled_path,
+                url_txt_path: disabled_url_txt,
+                disabled,
+            }
+        } else {
+            FilePathsPart {
+                path,
+                url_txt_path: url_txt,
+                disabled,
+            }
+        }
+    }
+
+    pub fn file_paths_new(&self, addon_id: AddonID, disabled: bool) -> FilePaths {
+        let paths = self.file_paths_part_new(disabled);
+
+        let cache_path = PathBuf::from(
+            format!("../cursinator_mod_cache/{}_{}_{}",addon_id.0,self.id.0,self.file_name)
+        );
+
+        FilePaths {
+            path: paths.path,
+            cache_path,
+            url_txt_path: paths.url_txt_path,
+            disabled: paths.disabled,
+        }
+    }
+
+    pub fn file_paths_current(&self, addon_id: AddonID, allow_fixups: bool) -> FilePaths {
+        let paths = self.file_paths_part_current(allow_fixups);
+
+        let cache_path = PathBuf::from(
+            format!("../cursinator_mod_cache/{}_{}_{}",addon_id.0,self.id.0,self.file_name)
+        );
+
+        FilePaths {
+            path: paths.path,
+            cache_path,
+            url_txt_path: paths.url_txt_path,
+            disabled: paths.disabled,
+        }
+    }
+}
+
+pub struct FilePaths {
+    pub path: PathBuf,
+    pub cache_path: PathBuf,
+    pub url_txt_path: PathBuf,
+    pub disabled: bool,
+}
+
+pub struct FilePathsPart {
+    pub path: PathBuf,
+    pub url_txt_path: PathBuf,
+    pub disabled: bool,
+}
+
+impl FilePathsPart {
     pub fn remove(&self) -> anyhow::Result<bool> {
-        remove_if(self.url_txt_path())?;
-        Ok(remove_if(self.file_path())?)
-    }
-
-    pub fn file_path(&self) -> PathBuf {
-        PathBuf::from(&self.file_name)
-    }
-    pub fn file_part_path(&self) -> PathBuf {
-        PathBuf::from(format!("{}.part",self.file_name))
-    }
-    pub fn url_txt_path(&self) -> PathBuf {
-        PathBuf::from(format!("{}.url.txt",self.file_name))
-    }
-    pub fn url_txt_part_path(&self) -> PathBuf {
-        PathBuf::from(format!("{}.url.txt.part",self.file_name))
+        remove_if(&self.url_txt_path)?;
+        Ok(remove_if(&self.path)?)
     }
 
     pub fn is_downloaded(&self) -> bool {
-        self.file_path().is_file()
+        self.path.is_file()
     }
 }
 
-#[must_use]
-pub struct DownloadFinalize {
-    pub(super) file: Finalize,
-    pub(super) url_txt: Finalize,
-}
+impl FilePaths {
+    pub fn remove(&self) -> anyhow::Result<()> {
+        remove_if(&self.url_txt_path)?;
+        remove_if(&self.path)?;
+        Ok(())
+    }
 
-impl DownloadFinalize {
-    pub fn finalize(self) {
-        self.file.finalize();
-        self.url_txt.finalize();
+    pub fn remove_if_not_new(&self, new: &Self) -> anyhow::Result<()> {
+        if new.url_txt_path != self.url_txt_path {
+            remove_if(&self.url_txt_path)?;
+        }
+        if new.path != self.path {
+            remove_if(&self.path)?;
+        }
+        Ok(())
+    }
+
+    pub fn is_downloaded(&self) -> bool {
+        self.path.is_file()
+    }
+
+    pub fn ensure_path_dir(&self) -> anyhow::Result<()> {
+        let cache_dir = Path::new("../cursinator_mod_cache");
+
+        match cache_dir.metadata() {
+            Ok(meta) => {
+                if !meta.is_dir() {
+                    bail!("cache_path is not a directory: {}",cache_dir.to_string_lossy());
+                }
+            },
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                std::fs::create_dir_all(&cache_dir)?;
+            },
+            Err(e) => return Err(e.into()),
+        }
+
+        Ok(())
     }
 }
 
