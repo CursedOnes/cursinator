@@ -179,7 +179,7 @@ impl AddonFile {
         let paths = self.file_paths_part_new(disabled);
 
         let cache_path = PathBuf::from(
-            format!("../cursinator_mod_cache/{}_{}_{}",addon_id.0,self.id.0,self.file_name)
+            format!("../cursinator_mod_cache/cf_{}_{}_{}",addon_id.0,self.id.0,self.file_name)
         );
 
         FilePaths {
@@ -194,7 +194,7 @@ impl AddonFile {
         let paths = self.file_paths_part_current(allow_fixups);
 
         let cache_path = PathBuf::from(
-            format!("../cursinator_mod_cache/{}_{}_{}",addon_id.0,self.id.0,self.file_name)
+            format!("../cursinator_mod_cache/cf_{}_{}_{}",addon_id.0,self.id.0,self.file_name)
         );
 
         FilePaths {
