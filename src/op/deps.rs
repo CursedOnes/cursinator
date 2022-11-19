@@ -22,7 +22,7 @@ pub fn collect_deps(
     //for dep in 
 
     for dep_id in deps {
-        if installed.contains_key(&dep_id) {continue}
+        if installed.get(&dep_id).map_or(false, |dep| dep.installed.is_some() )  {continue}
         if install_queue.iter().any(|a| a.id == dep_id ) {continue}
 
         let mut z_channel = channel;
@@ -66,9 +66,9 @@ pub fn collect_deps(
             api,
             dep_file.dependencies.iter_required(),
             game_version,
-            z_channel, //TODO z or non-z?
-            z_update_opt,
-            &z_version_blacklist,
+            channel,
+            update_opt,
+            &version_blacklist,
             install_queue,
         )?;
 
