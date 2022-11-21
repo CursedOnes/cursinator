@@ -126,7 +126,7 @@ fn decode_name_version(mut mod_req: &str) -> Result<(String,Option<String>),anyh
     } else if let Some((slug_part,version_part)) = mod_req.split_once('=') {
         slug_result = slug_part;
         version_result = Some(version_part);
-    } else if let Some((slug_part,version_part)) = mod_req.split_once("@") {
+    } else if let Some((slug_part,version_part)) = mod_req.split_once('@') {
         slug_result = slug_part;
         version_result = Some(version_part);
     }

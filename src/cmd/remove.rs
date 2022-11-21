@@ -39,7 +39,7 @@ pub fn main(
     if !o.noop {
         let addon = repo.addons.get_mut(&addon_id).unwrap();
         let installed = addon.installed.as_mut().unwrap();
-        let paths = installed.file_paths_current(addon_id, !o.noop);
+        let paths = installed.file_paths_current(addon_id, !o.noop, &repo.conf);
         unwrap_result_error!(
             paths.remove(),
             |e|"Failed to remove addon: {}",e

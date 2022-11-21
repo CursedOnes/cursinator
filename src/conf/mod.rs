@@ -2,7 +2,7 @@ pub mod defaults;
 
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, ErrorKind};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde_derive::*;
 
@@ -32,6 +32,9 @@ pub struct Conf {
     pub api_domain: String,
 
     pub override_api_key: Option<String>,
+
+    #[serde(default)]
+    pub symlink_cache_path: Option<PathBuf>,
 }
 
 impl Repo {
@@ -84,4 +87,24 @@ fn file_write_new(p: impl AsRef<Path>) -> std::io::Result<File> {
         .write(true)
         .create_new(true)
         .open(p)
+}
+
+impl Conf {
+    pub fn ensure_cache_dir(&self) -> anyhow::Result<()> {
+        if let Some(cache_dir) = &self.symlink_cache_path {
+            match cache_dir.metadata() {
+                Ok(meta) => {
+                    if !meta.is_dir() {
+                        anyhow::bail!("cache_path is not a directory: {}",cache_dir.to_string_lossy());
+                    }
+                },
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                    std::fs::create_dir_all(cache_dir)?;
+                },
+                Err(e) => return Err(e.into()),
+            }
+        }
+        
+        Ok(())
+    }
 }

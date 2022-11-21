@@ -6,6 +6,7 @@ use crate::addon::local::{LocalAddon, UpdateOpt};
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::api::API;
 use crate::conf::Repo;
+use crate::util::fs::Finalize;
 use super::deps::collect_deps;
 use super::incompat::*;
 use crate::{Op, error, warn, log_error};
@@ -97,6 +98,7 @@ pub fn install_mod(
             let dep_install_paths = dep_to_install.file_paths_new(
                 i.id,
                 false,
+                &repo.conf,
             );
 
             let finalizer = dep_to_install.download(&dep_install_paths, &repo.conf, api, false)
@@ -116,14 +118,15 @@ pub fn install_mod(
 
     let prev_paths = repo.addons.get(&addon_id)
         .and_then(|a| a.installed.as_ref() )
-        .map(|f| f.file_paths_current(addon_id, !o.noop) );
+        .map(|f| f.file_paths_current(addon_id, !o.noop, &repo.conf) );
 
     let mut installed_paths = None;
 
     if !o.noop {
         let install_paths = install.file_paths_new(
             addon_id,
-            prev_paths.as_ref().map_or(false, |prev| prev.disabled)
+            prev_paths.as_ref().map_or(false, |prev| prev.disabled),
+            &repo.conf,
         );
 
         let finalizer = install.download(&install_paths, &repo.conf, api, false)
@@ -162,9 +165,7 @@ pub fn install_mod(
         }
     }
 
-    for f in finalizer_queue {
-        f.finalize();
-    }
+    Finalize::finalize_slice(&mut finalizer_queue)?;
 
     for (id,i) in installed_queue {
         repo.addons.insert(id,i);

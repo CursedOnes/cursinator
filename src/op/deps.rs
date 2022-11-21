@@ -68,7 +68,7 @@ pub fn collect_deps(
             game_version,
             channel,
             update_opt,
-            &version_blacklist,
+            version_blacklist,
             install_queue,
         )?;
 

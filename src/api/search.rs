@@ -24,7 +24,7 @@ impl API {
     pub fn search_query(&mut self, query: &SearchQuery) -> anyhow::Result<Vec<AddonInfo>> {
         if self.offline {hard_error!("Offline mode")};
 
-        match handle_retry(|| self.furse.get_mut().search_mods(&query), self.retry_count) {
+        match handle_retry(|| self.furse.get_mut().search_mods(query), self.retry_count) {
             Ok(mod_files) => {Ok(
                 mod_files.into_iter()
                     .filter(|addon| addon.allow_mod_distribution == Some(true) )

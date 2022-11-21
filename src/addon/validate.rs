@@ -13,7 +13,7 @@ use super::files::AddonFile;
 
 impl AddonFile {
     pub fn validate(&self, paths: &FilePaths, cache_only: bool) -> Result<ValidateResult,anyhow::Error> {
-        let file = if cache_only {&paths.cache_path} else {&paths.path};
+        let file = if cache_only && paths.cache_path.is_some() {paths.cache_path.as_ref().unwrap()} else {&paths.path};
 
         let mut result = ValidateResult {
             sha: String::new(),
@@ -52,7 +52,7 @@ impl AddonFile {
         if result.file_exist && self.file_length == file.metadata()?.len() {
             let sha = sha1_hash_file(file)?;
 
-            let sha_str = hex::encode(&sha);
+            let sha_str = hex::encode(sha);
 
             result.file_valid = &sha_str == file_hash.as_ref().unwrap();
         }
@@ -62,9 +62,23 @@ impl AddonFile {
         Ok(result)
     }
 
-    pub fn is_cached_valid(&self, paths: &FilePaths) -> Result<Option<String>,anyhow::Error> {
-        let metadata = paths.cache_path.metadata()?;
+    pub fn is_downloaded_valid(&self, paths: &FilePaths) -> Result<Option<String>,anyhow::Error> {
+        if let Some(cache_path) = &paths.cache_path {
+            // match self.is_downloaded_addon_valid(cache_path) {
+            //     Ok(Some(s)) => Ok(Some(s)),
+            //     _ => self.is_downloaded_addon_valid(&paths.path)
+            // }
+            self.is_downloaded_addon_valid(cache_path)
+        } else {
+            self.is_downloaded_addon_valid(&paths.path)
+        }
+    }
 
+    pub fn is_downloaded_addon_valid(&self, path: impl AsRef<Path>) -> Result<Option<String>,anyhow::Error> {
+        let path = path.as_ref();
+        
+        let metadata = path.metadata()?;
+        
         if self.file_length != metadata.len() {return Ok(None);}
 
         let file_hash = match self.sha1_hash.as_ref() {
@@ -72,16 +86,16 @@ impl AddonFile {
             None => return Ok(None),
         };
 
-        let sha = sha1_hash_file(&paths.cache_path)?;
+        let sha = sha1_hash_file(path)?;
 
-        let sha_str = hex::encode(&sha);
+        let sha_str = hex::encode(sha);
 
-        Ok((&sha_str == file_hash).then(|| sha_str))
+        Ok((&sha_str == file_hash).then_some(sha_str))
     }
 
     /// validate and re-download if not valid
     pub fn validate_download(&self, paths: &FilePaths, conf: &Conf, api: &mut API, fin: &mut Vec<Finalize>, cache_only: bool) -> Result<(),anyhow::Error> {
-        paths.ensure_path_dir()?;
+        conf.ensure_cache_dir()?;
         
         let validation = self.validate(paths, cache_only)?;
 
@@ -112,7 +126,7 @@ fn sha1_hash_file(file: impl AsRef<Path>) -> std::io::Result<[u8;20]> {
             }
             Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
             Err(ref e) if e.kind() == ErrorKind::UnexpectedEof => break,
-            Err(e) => return Err(e.into()),
+            Err(e) => return Err(e),
         }
     }
 

@@ -22,6 +22,7 @@ pub fn init(
             api_headers: default_api_headers(),
             api_domain: default_api_domain(),
             override_api_key: None,
+            symlink_cache_path: None, //Some("../cursinator_mod_cache".into())
         },
         addons: LocalAddons(Default::default()),
     };

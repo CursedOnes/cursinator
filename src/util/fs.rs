@@ -1,11 +1,13 @@
 use std::ffi::{OsStr, OsString};
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use crate::log_error;
+use anyhow::bail;
+
+use crate::{log_error, error};
 
 #[must_use]
 pub struct Finalize {
-    pub finalize: Option<Box<dyn FnOnce()>>,
+    pub finalize: Option<Box<dyn FnOnce() -> anyhow::Result<()>>>,
     pub cancel: Option<Box<dyn FnOnce()>>,
 }
 
@@ -17,8 +19,9 @@ impl Finalize {
         }
         Self {
             finalize: Some(Box::new(move || {
-                log_error!(remove_if(&path));
-                log_error!(std::fs::rename(&part_path, &path));
+                remove_if(&path)?;
+                std::fs::rename(&part_path, &path)?;
+                Ok(())
             })),
             cancel: Some(Box::new(move || {
                 log_error!(remove_if(&part_path2));
@@ -46,11 +49,31 @@ impl Finalize {
         self.finalize.is_none() && self.cancel.is_none()
     }
 
-    pub fn finalize(mut self) {
+    pub fn finalize(mut self) -> anyhow::Result<()> {
         self.cancel = None;
         if let Some(finalize) = self.finalize.take() {
             finalize()
+        } else {
+            Ok(())
         }
+    }
+
+    pub fn finalize_slice(s: &mut [Self]) -> anyhow::Result<()> {
+        for v in s.iter_mut() {
+            if let Some(finalize) = v.finalize.take() {
+                finalize()?;
+            }
+        }
+        for v in s {
+            v.cancel = None;
+        }
+        Ok(())
+    }
+
+    pub fn finalize_drain(s: &mut Vec<Self>) -> anyhow::Result<()> {
+        let result = Self::finalize_slice(&mut *s);
+        s.clear();
+        result
     }
 }
 
@@ -82,9 +105,21 @@ impl std::ops::Add<Self> for Finalize {
                 a.or(b)
             }
         }
+        
+        fn add_fns_result(a: Option<Box<dyn FnOnce() -> anyhow::Result<()>>>, b: Option<Box<dyn FnOnce() -> anyhow::Result<()>>>) -> Option<Box<dyn FnOnce() -> anyhow::Result<()>>> {
+            if a.is_some() && b.is_some() {
+                let (a,b) = (a.unwrap(),b.unwrap());
+                Some(Box::new(move || {
+                    a()?;
+                    b()
+                }))
+            } else {
+                a.or(b)
+            }
+        }
 
         Self {
-            finalize: add_fns(l_fin, r_fin),
+            finalize: add_fns_result(l_fin, r_fin),
             cancel: add_fns(l_can, r_can),
         }
     }
@@ -143,4 +178,38 @@ pub fn create_guarded_symlink(src: impl AsRef<Path>, dest: PathBuf) -> anyhow::R
             log_error!(remove_if(&dest));
         }) as Box<dyn FnOnce()>)
     })
+}
+
+pub fn create_guarded_symlink_lazy(src: PathBuf, dest: PathBuf) -> anyhow::Result<Finalize> {
+    if src != dest {
+        match dest.symlink_metadata() {
+            Ok(meta) => if meta.is_dir() {
+                bail!("Directory");
+            },
+            Err(e) if e.kind() != ErrorKind::NotFound => bail!("{}",e),
+            _ => {}
+        }
+
+        Ok(Finalize {
+            finalize: Some(Box::new(move || {
+                match std::fs::remove_file(&dest) {
+                    Err(e) if e.kind() != ErrorKind::NotFound => bail!("{}",e),
+                    _ => {}
+                }
+
+                std::os::unix::fs::symlink(src, &dest)?;
+
+                Ok(())
+            })),
+            cancel: None,
+        })
+    } else {
+        Ok(Finalize::noop())
+    }
+}
+
+pub fn attached_to_path(path: impl Into<PathBuf>, add: impl AsRef<OsStr>) -> PathBuf {
+    let mut path = path.into().into_os_string();
+    path.push(add);
+    path.into()
 }
