@@ -31,6 +31,8 @@ impl AddonFile {
         
         match self.is_cached_valid(paths) {
             Ok(v) => validated = v,
+            Err(e) if e.downcast_ref::<std::io::Error>()
+                .map_or(false, |e| e.kind() == std::io::ErrorKind::NotFound ) => {},
             Err(e) => warn!("{}",e),
         }
 
@@ -64,9 +66,7 @@ impl AddonFile {
 
                 resp.into_reader().read_to_end(&mut buf)?;
 
-                // verify size and murmur hash of downloaded data
                 soft_assert!(buf.len() == file_length, anyhow!("file_length mismatch"), soft_error);
-                //soft_assert!(murmur32(&buf) == self.package_fingerprint, anyhow!("package_fingerprint mismatch"),soft_error);
 
                 // hash the downloaded data
                 let sha = {
@@ -100,9 +100,11 @@ impl AddonFile {
                 if let Some(addon_time) = log_error!(parse_date(&self.file_date)) {
                     let addon_time = FileTime::from_unix_time(addon_time.timestamp(),0);
                     let now = FileTime::now();
-                    log_error!(set_file_times(&paths.cache_path, now, addon_time),   |e| "Failed to set file time: {}",e);
-                    log_error!(set_file_times(&paths.path, now, addon_time),   |e| "Failed to set file time: {}",e);
-                    log_error!(set_file_times(&paths.url_txt_path, now, addon_time),|e| "Failed to set file time: {}",e);
+                    log_error!(set_file_times(&paths.cache_path, now, addon_time),   |e| "Failed to set file time 1: {}",e);
+                    log_error!(set_file_times(&paths.path, now, addon_time),   |e| "Failed to set file time 2: {}",e);
+                    if paths.url_txt_path.is_file() {
+                        log_error!(set_file_times(&paths.url_txt_path, now, addon_time),|e| "Failed to set file time 3: {}",e);
+                    }
                 }
             }
 
