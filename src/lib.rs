@@ -159,13 +159,13 @@ pub enum OpCmd {
     /// Update all addons
     #[command(name = "update-all")]
     UpdateAll {
-        /// TODO
+        /// Override addon's channel for this operation only
         #[arg(short,long)]
         alpha: bool,
-        /// TODO
+        /// Override addon's channel for this operation only
         #[arg(short,long)]
         beta: bool,
-        /// TODO
+        /// Override addon's channel for this operation only
         #[arg(short,long)]
         release: bool,
     },

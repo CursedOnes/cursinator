@@ -54,7 +54,7 @@ pub fn main(
                 Some(installed.id),
                 &repo.conf.game_version,
                 addon.version_blacklist.as_deref(),
-                addon.channel, //TODO channel arg
+                rt.unwrap_or(addon.channel),
                 false, //TODO allow_upgrade arg
             );
 
