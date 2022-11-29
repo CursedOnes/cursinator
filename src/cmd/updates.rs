@@ -37,12 +37,17 @@ pub fn main(
             hard_error!("No version for current game version");
         }
 
+        if !versions.iter().any(|v| repo.conf.filter_addon_file(v, addon.version_blacklist.as_deref(), addon.positive_negative_in_filename) ) {
+            hard_error!("No version for current filter");
+        }
+
         print_versions(
             &versions,
             Some(addon.installed.as_ref().unwrap()),
             rt.unwrap_or(addon.channel),
-            &repo.conf.game_version,
+            &repo.conf,
             addon.version_blacklist.as_deref(),
+            addon.positive_negative_in_filename,
             list_older,
             if show_all {16384} else {term_h().saturating_sub(4).max(16) as usize},
         );
@@ -65,13 +70,20 @@ pub fn main(
 
             if !versions.iter().any(|v| repo.conf.game_version.matches(v.game_version.iter()) ) {
                 error!("No version for current game version: {}",a.slug);
+                continue;
+            }
+
+            if !versions.iter().any(|v| repo.conf.filter_addon_file(v, a.version_blacklist.as_deref(), a.positive_negative_in_filename) ) {
+                error!("No version for current filter: {}",a.slug);
+                continue;
             }
 
             let new = find_version_update(
                 &versions,
                 Some(installed.id),
-                &repo.conf.game_version,
+                &repo.conf,
                 a.version_blacklist.as_deref(),
+                a.positive_negative_in_filename,
                 a.channel,
                 list_older,
             );

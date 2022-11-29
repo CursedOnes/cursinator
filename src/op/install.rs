@@ -23,6 +23,7 @@ pub fn install_mod(
     update_opt: UpdateOpt,
     manually_installed: bool,
     version_blacklist: Option<String>,
+    positive_negative_in_filename: bool,
     // oof
     o: &Op,
     api: &mut API,
@@ -47,10 +48,11 @@ pub fn install_mod(
         &repo.addons,
         api,
         install.dependencies.iter_required(),
-        &repo.conf.game_version,
+        &repo.conf,
         channel,
         update_opt,
         &version_blacklist,
+        positive_negative_in_filename,
         &mut install_queue,
     )?;
 
@@ -142,6 +144,7 @@ pub fn install_mod(
             update_opt,
             manually_installed,
             version_blacklist,
+            positive_negative_in_filename,
             installed: Some(install),
         }));
 

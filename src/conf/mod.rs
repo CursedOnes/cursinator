@@ -35,6 +35,12 @@ pub struct Conf {
 
     #[serde(default)]
     pub symlink_cache_path: Option<PathBuf>,
+
+    #[serde(default)]
+    pub positive_loader_filter: Vec<String>,
+
+    #[serde(default)]
+    pub negative_loader_filter: Vec<String>,
 }
 
 impl Repo {

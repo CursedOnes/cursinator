@@ -1,13 +1,15 @@
 use crate::addon::{FileID, GameVersion};
 use crate::addon::files::AddonFile;
 use crate::addon::rtm::ReleaseTypeMode;
+use crate::conf::Conf;
 use crate::warn;
 
 pub fn find_version_update<'a>(
     versions: &'a [AddonFile],
     installed: Option<FileID>,
-    game_version: &GameVersion,
+    conf: &Conf,
     blacklist: Option<&str>,
+    positive_negative_in_filename: bool,
     release_type: ReleaseTypeMode,
     allow_downgrade: bool,
 ) -> Option<&'a AddonFile> {
@@ -30,7 +32,7 @@ pub fn find_version_update<'a>(
         current_idx..versions.len()
     };
 
-    release_type.pick_version(&versions[visible_range], game_version, blacklist)
+    release_type.pick_version(&versions[visible_range], conf, blacklist, positive_negative_in_filename)
         .filter(|f| installed.is_none() || f.id != installed.unwrap() )
 }
 

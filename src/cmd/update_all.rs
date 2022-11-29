@@ -49,11 +49,16 @@ pub fn main(
                 error!("No version for current game version: {}",addon.slug);
             }
 
+            if !versions.iter().any(|v| repo.conf.filter_addon_file(v, addon.version_blacklist.as_deref(), addon.positive_negative_in_filename) ) {
+                error!("No version for current filter: {}",addon.slug);
+            }
+
             let new = find_version_update(
                 &versions,
                 Some(installed.id),
-                &repo.conf.game_version,
+                &repo.conf,
                 addon.version_blacklist.as_deref(),
+                addon.positive_negative_in_filename,
                 rt.unwrap_or(addon.channel),
                 false, //TODO allow_upgrade arg
             );
@@ -67,12 +72,23 @@ pub fn main(
                     addon.update_opt,
                     addon.manually_installed,
                     addon.version_blacklist.clone(),
+                    addon.positive_negative_in_filename,
                     new.clone(),
                 ));
             }
         }
 
-        for (id,slug,name,channel,update_opt,manually_installed,version_blacklist,file) in queue {
+        for (
+            id,
+            slug,
+            name,
+            channel,
+            update_opt,
+            manually_installed,
+            version_blacklist,
+            positive_negative_in_filename,
+            file
+        ) in queue {
             let result = install_mod(
                 id,
                 file,
@@ -83,6 +99,7 @@ pub fn main(
                 update_opt, //TODO give as arg
                 manually_installed,
                 version_blacklist, //TODO give vb as arg
+                positive_negative_in_filename,
                 o,
                 api,
                 repo,

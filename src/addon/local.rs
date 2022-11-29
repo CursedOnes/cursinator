@@ -14,7 +14,13 @@ pub struct LocalAddon { //TODO defaults
     pub update_opt: UpdateOpt,
     pub manually_installed: bool,
     pub version_blacklist: Option<String>, //blacklist versions with occurrence in game versions or filename
+    #[serde(default = "default_positive_negative_in_filename")]
+    pub positive_negative_in_filename: bool,
     pub installed: Option<AddonFile>,
+}
+
+fn default_positive_negative_in_filename() -> bool {
+    true
 }
 
 use rustc_hash::FxHashMap;
@@ -91,21 +97,5 @@ impl<'de> Deserialize<'de> for LocalAddons {
         }
 
         deserializer.deserialize_seq(LAVisitor)
-    }
-}
-
-impl AddonFile {
-    pub fn not_in_blacklist(&self, b: Option<&str>) -> bool {
-        if let Some(b) = b { //TODO proper regex
-            let b = b.trim().to_lowercase();
-            for g in &self.game_version {
-                if g.0.trim().to_lowercase().contains(&b) {
-                    return false;
-                }
-            }
-            !self.file_name.trim().to_lowercase().contains(&b)
-        } else {
-            true
-        }
     }
 }

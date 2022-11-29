@@ -47,6 +47,10 @@ pub fn main(
         bail!("No version for current game version");
     }
 
+    if !versions.iter().any(|v| repo.conf.filter_addon_file(v, version_blacklist.as_deref(), true) ) {
+        bail!("No version for current filter");
+    }
+
     let channel = rt.unwrap_or_else(|| ReleaseTypeMode::new(false,false,false) ); //TODO use channel from previous install
 
     let file;
@@ -57,8 +61,9 @@ pub fn main(
         let new = find_version_update(
             &versions,
             None,
-            &repo.conf.game_version,
+            &repo.conf,
             version_blacklist.as_deref(),
+            true, //TODO
             channel,
             true,
         );
@@ -78,6 +83,7 @@ pub fn main(
         UpdateOpt::All, //TODO give as arg
         true,
         None, //TODO give vb as arg
+        true, //TODO
         o,
         api,
         repo,

@@ -36,6 +36,10 @@ pub fn main(
         hard_error!("No version for current game version");
     }
 
+    if !versions.iter().any(|v| repo.conf.filter_addon_file(v, addon.version_blacklist.as_deref(), addon.positive_negative_in_filename) ) {
+        hard_error!("No version for current filter");
+    }
+
     let channel = rt.unwrap_or(addon.channel); //TODO use channel from previous install
 
     let file;
@@ -55,8 +59,9 @@ pub fn main(
         let new = find_version_update(
             &versions,
             Some(addon.installed.as_ref().unwrap().id),
-            &repo.conf.game_version,
+            &repo.conf,
             addon.version_blacklist.as_deref(),
+            addon.positive_negative_in_filename,
             channel,
             allow_downgrade,
         );
@@ -76,6 +81,7 @@ pub fn main(
         addon.update_opt, //TODO give as arg
         addon.manually_installed,
         addon.version_blacklist.clone(), //TODO give vb as arg
+        addon.positive_negative_in_filename,
         o,
         api,
         repo,

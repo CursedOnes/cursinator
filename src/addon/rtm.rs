@@ -2,6 +2,8 @@ use std::fmt::Display;
 use std::ops::BitOr;
 use serde_derive::*;
 
+use crate::conf::Conf;
+
 use super::GameVersion;
 use super::files::AddonFile;
 use super::release_type::ReleaseType;
@@ -41,25 +43,24 @@ impl ReleaseTypeMode {
             ReleaseType::Alpha   => self.alpha,
         }
     }
-    pub fn pick_version<'a>(&self, v: &'a [AddonFile], gv: &GameVersion, blacklist: Option<&str>) -> Option<&'a AddonFile> {
-        fn find_legal<'a>(v: &'a [AddonFile], g: ReleaseType, gv: &GameVersion, blacklist: Option<&str>) -> Option<&'a AddonFile> {
+    pub fn pick_version<'a>(&self, v: &'a [AddonFile], conf: &Conf, blacklist: Option<&str>, positive_negative_in_filename: bool) -> Option<&'a AddonFile> {
+        fn find_legal<'a>(v: &'a [AddonFile], g: ReleaseType, conf: &Conf, blacklist: Option<&str>, positive_negative_in_filename: bool) -> Option<&'a AddonFile> {
             v.iter()
                 .rev()
-                .filter(|v| gv.matches(v.game_version.iter()) )
-                .filter(|v| v.not_in_blacklist(blacklist) )
+                .filter(|file| conf.filter_addon_file(file, blacklist, positive_negative_in_filename))
                 .find(|v| v.release_type >= g )
         }
 
         let mut r = None;
 
         if r.is_none() && self.release {
-            r = find_legal(v, ReleaseType::Release, gv, blacklist);
+            r = find_legal(v, ReleaseType::Release, conf, blacklist, positive_negative_in_filename);
         }
         if r.is_none() && self.beta {
-            r = find_legal(v, ReleaseType::Beta   , gv, blacklist);
+            r = find_legal(v, ReleaseType::Beta   , conf, blacklist, positive_negative_in_filename);
         }
         if r.is_none() && self.alpha {
-            r = find_legal(v, ReleaseType::Alpha  , gv, blacklist);
+            r = find_legal(v, ReleaseType::Alpha  , conf, blacklist, positive_negative_in_filename);
         }
 
         if r.is_none() {
@@ -110,5 +111,55 @@ impl BitOr for ReleaseTypeMode {
             beta:    self.beta    | rhs.beta,
             alpha:   self.alpha   | rhs.alpha,
         }
+    }
+}
+
+impl Conf {
+    pub fn filter_addon_file(&self, file: &AddonFile, legacy_blacklist: Option<&str>, positive_negative_in_filename: bool) -> bool {
+        if !self.game_version.matches(file.game_version.iter()) {
+            return false;
+        }
+
+        fn in_list(file: &AddonFile, entry: &str) -> bool {
+            let entry = entry.trim().to_lowercase();
+            for file_game_version in &file.game_version {
+                if file_game_version.0.trim().to_lowercase().contains(&entry) {
+                    return true;
+                }
+            }
+            false
+        }
+
+        fn in_filename(file: &AddonFile, entry: &str) -> bool {
+            file.file_name.trim().to_lowercase().contains(&*entry.trim().to_lowercase())
+        }
+
+        if self.positive_loader_filter.iter().any(|filter| in_list(file, filter) ) {
+            return true;
+        }
+
+        if legacy_blacklist.map_or(false, |b|in_list(file, b) ) {
+            return false;
+        }
+
+        if self.negative_loader_filter.iter().any(|filter| in_list(file, filter) ) {
+            return false;
+        }
+
+        if positive_negative_in_filename {
+            if self.positive_loader_filter.iter().any(|filter| in_filename(file, filter) ) {
+                return true;
+            }
+    
+            if legacy_blacklist.map_or(false, |b| in_filename(file, b) ) {
+                return false;
+            }
+    
+            if self.negative_loader_filter.iter().any(|filter| in_filename(file, filter) ) {
+                return false;
+            }
+        }
+
+        true
     }
 }

@@ -1,5 +1,6 @@
 use crate::addon::rtm::ReleaseTypeMode;
 use crate::addon::GameVersion;
+use crate::conf::Conf;
 use crate::util::match_str::Match;
 
 use super::*;
@@ -9,8 +10,9 @@ pub fn print_versions(
     current: Option<&AddonFile>,
     release_type: ReleaseTypeMode,
     //current_slug: &AddonSlug,
-    game_version: &GameVersion,
+    conf: &Conf,
     blacklist: Option<&str>,
+    positive_negative_in_filename: bool,
     print_older: bool,
     max_h: usize,
 ){
@@ -44,8 +46,9 @@ pub fn print_versions(
         target_release_type,
         current,
         true,
-        game_version,
+        conf,
         blacklist,
+        positive_negative_in_filename,
         versions[visible_range.clone()].iter().rev().map(AsAddonFile::file)
     );
     if visible_range.start != 0 {
@@ -60,8 +63,9 @@ pub fn print_versions(
             target_release_type,
             current,
             false,
-            game_version,
+            conf,
             blacklist,
+            positive_negative_in_filename,
             versions[visible_range.clone()].iter().rev().map(AsAddonFile::file)
         );
         if visible_range.start != 0 {
@@ -100,12 +104,13 @@ fn push_visible<'a>(
     mut initial: ReleaseType,
     current: Option<&AddonFile>,
     push_all: bool,
-    game_version: &GameVersion,
+    conf: &Conf,
     blacklist: Option<&str>,
+    positive_negative_in_filename: bool,
     versions: impl Iterator<Item=&'a AddonFile>,
 ){
     for f in versions {
-        if game_version.matches(f.game_version.iter()) && f.not_in_blacklist(blacklist) {
+        if conf.filter_addon_file(f, blacklist, positive_negative_in_filename) {
             if f.release_type >= initial || push_all {
                 initial = f.release_type;
                 dest.push(Some(f));

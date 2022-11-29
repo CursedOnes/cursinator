@@ -23,6 +23,8 @@ pub fn init(
             api_domain: default_api_domain(),
             override_api_key: None,
             symlink_cache_path: None, //Some("../cursinator_mod_cache".into())
+            positive_loader_filter: vec![],
+            negative_loader_filter: vec![],
         },
         addons: LocalAddons(Default::default()),
     };
