@@ -1,7 +1,9 @@
+use std::fmt::Display;
+
 use furse::structures::file_structs::FileReleaseType;
 
 
-#[derive(Copy,Clone,PartialEq,Eq)]
+#[derive(Copy,Clone,PartialEq,Eq,Debug)]
 pub enum ReleaseType {
     Alpha,
     Beta,
@@ -68,5 +70,15 @@ impl<'de> serde::Deserialize<'de> for ReleaseType {
         D: serde::Deserializer<'de> {
         u32::deserialize(deserializer)
             .map(Self::from_number)
+    }
+}
+
+impl Display for ReleaseType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ReleaseType::Alpha => write!(f,"Alpha"),
+            ReleaseType::Beta => write!(f,"Beta"),
+            ReleaseType::Release => write!(f,"Release"),
+        }
     }
 }

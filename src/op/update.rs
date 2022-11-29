@@ -44,8 +44,10 @@ pub fn fix_discrepancy(
     if let Some(remote) = remote {
         if remote.release_type != installed.release_type {
             warn!(
-                "{}: Release type discrepancy between local and online info: Perhaps the Release type of the file was modified online after installation",
+                "{}: Release type discrepancy between local and online info: Perhaps the Release type of the file was modified online after installation. local={} online={}",
                 installed.file_name,
+                installed.release_type,
+                remote.release_type,
             );
         }
 
