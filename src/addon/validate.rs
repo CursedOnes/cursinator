@@ -41,7 +41,11 @@ impl AddonFile {
                 if file_hash.is_none() {
                     file_hash = Some(line_hash.trim().to_owned());
                 }
-                result.urltxt_valid = line_url.trim() == self.download_url.0.trim() && line_hash.trim() == file_hash.as_ref().unwrap();
+
+                let download_url = self.download_url.as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("No download link") )?;
+
+                result.urltxt_valid = line_url.trim() == download_url.0.trim() && line_hash.trim() == file_hash.as_ref().unwrap();
             }
         }
 

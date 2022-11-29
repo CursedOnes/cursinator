@@ -4,6 +4,8 @@ use std::convert::TryInto;
 use furse::structures::file_structs::{File, HashAlgo};
 use serde_derive::*;
 
+use crate::error;
+
 use super::{FileGameVersion, FileID};
 use super::dependency::Dependencies;
 use super::release_type::ReleaseType;
@@ -17,7 +19,7 @@ pub struct AddonFile {
     pub file_date: String, //TODO serialized date
     pub file_length: u64,
     pub release_type: ReleaseType,
-    pub download_url: DownloadURL,
+    pub download_url: Option<DownloadURL>,
     pub is_alternate: bool,
     pub alternate_file_id: u64,
     pub dependencies: Dependencies,
@@ -61,6 +63,10 @@ impl Borrow<ReleaseType> for AddonFile {
 
 impl From<File> for AddonFile {
     fn from(file: File) -> Self {
+        if file.download_url.is_none() {
+            error!("{} is undistributable",file.file_name);
+        }
+
         Self {
             id: FileID(file.id.try_into().unwrap()),
             display_name: file.display_name,
@@ -69,7 +75,7 @@ impl From<File> for AddonFile {
             file_length: file.file_length as u64,
             release_type: file.release_type.into(),
             is_available: file.is_available && file.download_url.is_some(),
-            download_url: DownloadURL(file.download_url.expect("TODO handle undistributable addon error").to_string()),
+            download_url: file.download_url.map(|d| DownloadURL(d.to_string()) ),
             is_alternate: file.expose_as_alternative == Some(true),
             alternate_file_id: file.alternate_file_id.unwrap_or(0).try_into().unwrap(),
             dependencies: file.dependencies.into(),

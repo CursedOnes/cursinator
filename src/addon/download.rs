@@ -49,8 +49,11 @@ impl AddonFile {
 
             if validated.is_none() {
                 let mut buf = Vec::with_capacity(file_length);
+
+                let download_url = self.download_url.as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("No download link") )?;
                 
-                let resp = match api.http_get(&self.download_url.0) {
+                let resp = match api.http_get(&download_url.0) {
                     Err(e) => {
                         if let ureq::Error::Status(429, response) = &e {
                             let wait_duration = parse_retry_duration(
@@ -128,7 +131,10 @@ impl AddonFile {
         // write .url.txt.part with file url and SHA1 hash
         let mut url_txt = vec![];
 
-        writeln!(&mut url_txt,"{}",self.download_url.0.trim())?;
+        let download_url = self.download_url.as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No download link") )?;
+
+        writeln!(&mut url_txt,"{}",download_url.0.trim())?;
         writeln!(&mut url_txt,"{}",sha)?;
 
         let did_it_exist = is_existing(&paths.url_txt_path);
