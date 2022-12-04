@@ -19,10 +19,15 @@ State: WIP, all features mentioned in the README do work. Few side functions and
 
 # Install
 
+Build with API keys
+
 ```console
-# Build with API keys
 CURSEFORGE_API_KEY='...' cargo install -f --git https://github.com/CursedOnes/cursinator
-# Build without API keys, the API keys must then be supplied at runtime, via CURSEFORGE_API_KEY or inside repo.conf
+```
+
+Build without API keys, the API keys must then be supplied at runtime, via CURSEFORGE_API_KEY or inside repo.conf
+
+```console
 CURSEFORGE_API_KEY= cargo install -f --git https://github.com/CursedOnes/cursinator
 ```
 
