@@ -1,3 +1,6 @@
+use std::fmt::{Display, Debug};
+use std::ops::Add;
+
 use termion::terminal_size;
 
 use crate::Op;
@@ -166,5 +169,44 @@ impl Default for Koller {
             c: "",
             d: "",
         }
+    }
+}
+
+impl<T> Add<T> for Koller {
+    type Output = KollerApplied<T>;
+
+    fn add(self, rhs: T) -> Self::Output {
+        KollerApplied {
+            koller: self,
+            value: rhs,
+        }
+    }
+}
+
+#[derive(Clone,Copy)]
+pub struct KollerApplied<T> where T: ?Sized {
+    koller: Koller,
+    value: T,
+}
+
+impl<T> Display for KollerApplied<T> where T: Display + ?Sized {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.koller.a)?;
+        f.write_str(self.koller.b)?;
+        Display::fmt(&self.value, f)?;
+        f.write_str(self.koller.c)?;
+        f.write_str(self.koller.d)?;
+        Ok(())
+    }
+}
+
+impl<T> Debug for KollerApplied<T> where T: Debug + ?Sized {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.koller.a)?;
+        f.write_str(self.koller.b)?;
+        Debug::fmt(&self.value, f)?;
+        f.write_str(self.koller.c)?;
+        f.write_str(self.koller.d)?;
+        Ok(())
     }
 }

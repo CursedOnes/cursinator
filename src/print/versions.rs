@@ -85,13 +85,9 @@ pub fn print_versions(
                 prefix = release_type_prefix(&f.release_type);
             };
             eprintln!(
-                "{}{}{}{}{}{}{}{}{}{}",
-                pcolor.a,pcolor.b,
-                prefix,
-                pcolor.c,pcolor.d,
-                color.a,color.b,
-                f.display(),
-                color.c,color.d,
+                "{}{}",
+                pcolor + prefix,
+                color + f.display(),
             );
         }else{
             eprintln!("...");
@@ -148,13 +144,11 @@ impl AsAddonFile for Match<&AddonFile> {
         self.z
     }
     fn display(&self) -> String {
-        let c = Koller::blue_bold();
+        let color = Koller::blue_bold();
         format!(
-            "\t{}{}{}{}{}{}{}",
+            "\t{}{}{}",
             self.prefix(),
-            c.a,c.b,
-            self.marked(),
-            c.c,c.d,
+            color + self.marked(),
             self.suffix(),
         )
     }

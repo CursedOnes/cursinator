@@ -68,14 +68,14 @@ pub fn print_addon(
 
     let mut suffix1 = "".to_owned();
     if let Some(rt) = avail_rt {
-        let c = color_of_release_type_bold(&rt);
-        suffix1 = format!(" {}{}{}{}{}",c.a,c.b,release_type_str(&rt),c.c,c.d);
+        let color = color_of_release_type_bold(&rt);
+        suffix1 = format!(" {}", color + release_type_str(&rt));
     }
 
     let mut suffix2 = "".to_owned();
     if let Some(rt) = installed_rt {
-        let c = color_of_release_type_bold(&rt);
-        suffix2 = format!(" @{}{}{}{}{}",c.a,c.b,release_type_str(&rt),c.c,c.d);
+        let color = color_of_release_type_bold(&rt);
+        suffix2 = format!(" @{}", color + release_type_str(&rt));
     }
 
     let summary_width = max_width
@@ -93,10 +93,8 @@ pub fn print_addon(
     }
 
     eprintln!(
-        "{}{}{}{}{}{}{}{}",
-        color.a,color.b,
-        prefix,summ,
-        color.c,color.d,
+        "{}{}{}",
+        color + format_args!("{prefix}{summ}"),
         suffix1,suffix2
     );
 }
