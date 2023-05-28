@@ -10,7 +10,7 @@ license = "MIT"
 [dependencies]
 serde = "1"
 serde_derive = "1"
-serde_jsonrc = { git = "https://github.com/qwertz19281/serde-jsonrc", rev = "131ffb5f" }
+serde_jsonrc = { git = "https://github.com/qwertz19281/serde-jsonrc", branch = "0.1-serde-json-1" }
 clap = { version = "4", features = ["derive"] }
 ureq = { version = "2", features = ["json"] }
 anyhow = "1"
@@ -26,7 +26,7 @@ env_logger = "0.10.0"
 termion = "2"
 rustc-hash = "1.1"
 regex = "1.4"
-furse = { git = "https://github.com/CursedOnes/furse", rev = "808e18b6" }
+furse = { git = "https://github.com/CursedOnes/furse", rev = "84ff3c4d", default-features = false }
 futures = "0.3"
 httpdate = "1"
 
