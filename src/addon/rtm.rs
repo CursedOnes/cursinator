@@ -64,7 +64,9 @@ impl ReleaseTypeMode {
         }
 
         if r.is_none() {
-            r = v.iter().last();
+            r = v.iter()
+                .filter(|file| conf.filter_addon_file(file, blacklist, positive_negative_in_filename))
+                .last();
         }
 
         r
