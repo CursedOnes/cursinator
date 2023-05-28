@@ -8,7 +8,6 @@ use crate::addon::local::LocalAddons;
 pub fn init(
     o: &Op,
     game_version: Option<String>,
-    game_version_regex: Option<String>,
 ){
     hard_assert!(!o.conf.exists(),"repo already exists");
     let game_version = unwrap_or_error!(game_version,"no game version (-g) defined");

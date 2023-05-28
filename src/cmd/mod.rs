@@ -26,8 +26,8 @@ pub mod download_all;
 pub mod fill_cf_manifest;
 
 pub fn main(o: Op) {
-    if let OpCmd::Init { game_version, game_version_regex } = o.cmd.clone() {
-        return init::init(&o,game_version,game_version_regex);
+    if let OpCmd::Init { game_version } = o.cmd.clone() {
+        return init::init(&o,game_version);
     }
     
     let mut repo = match Repo::load(&o.conf) {

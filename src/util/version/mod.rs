@@ -253,13 +253,7 @@ impl VersionPart {
             }
 
             if number_plus.contains(&input[*cursor]) {
-                if build_number.is_empty() {
-                    if let Some(last) = points.last_mut() {
-                        last.1 = true;
-                    }
-                } else {
-                    bn_plus = true;
-                }
+                bn_plus = true;
                 *cursor += 1;
                 continue;
             }

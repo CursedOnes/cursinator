@@ -37,10 +37,17 @@ pub enum OpCmd {
     /// Initialize local mod repo
     #[command()]
     Init {
-        #[arg(short='g',long,help="gv")]
+        /// The game version range for which addons should be installed
+        ///
+        /// Examples:
+        /// - "1.19", "1.19.+", "1.19.0+" all 1.19.x versions
+        /// - "1.19.2+" 1.19.2 <= x < 1.20
+        /// - "1.19.2" 1.19.2 only
+        /// - "1.19-1.19.2" 1.19.0 <= x <= 1.19.2
+        /// - "1.16,1.19-1.19.2" 1.16.x or 1.19 - 1.19.2
+        /// - "1.16,!1.16.1-1.16.2" 1.16.x, excluding 1.16.1 and 1.16.2
+        #[arg(short='g', long, verbatim_doc_comment)]
         game_version: Option<String>,
-        #[arg(short='G',long,help="gv")]
-        game_version_regex: Option<String>,
     },
     /// Search online for addon
     #[command()]
