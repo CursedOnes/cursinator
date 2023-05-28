@@ -1,5 +1,6 @@
 pub mod match_str;
 pub mod fs;
+pub mod version;
 
 #[macro_export]
 macro_rules! hard_assert {

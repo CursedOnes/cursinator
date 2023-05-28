@@ -15,7 +15,7 @@ pub fn init(
 
     let repo = Repo {
         conf: Conf {
-            game_version: GameVersion(game_version),
+            game_version: GameVersion::from_string(game_version),
             url_txt: default_url_txt(),
             addon_mtime: default_addon_mtime(),
             soft_retries: default_soft_retries(),

@@ -8,7 +8,10 @@ pub mod validate;
 
 use std::fmt::Display;
 
-use serde::{Deserialize,Serialize};
+use serde::{Deserialize,Serialize,de::Error};
+
+use crate::{error, hard_error};
+use crate::util::version::{VersionMatcher, VersionPart};
 
 #[derive(Deserialize,Serialize,Copy,Clone,PartialEq,Eq,Hash)]
 #[serde(transparent)]
@@ -33,43 +36,135 @@ impl AddonSlug {
 #[repr(transparent)]
 pub struct FileID(pub u64);
 
-#[derive(Deserialize,Serialize,Clone)]
-#[serde(transparent)]
-#[repr(transparent)]
-pub struct FileGameVersion(pub String);
+#[derive(Clone)]
+pub struct FileGameVersion {
+    str: String,
+    vpart: VersionPart,
+}
 
-#[derive(Deserialize,Serialize,Clone)]
-#[serde(transparent)]
-#[repr(transparent)]
-pub struct GameVersion(pub String);
+#[derive(Clone)]
+pub struct GameVersion {
+    str: String,
+    matcher: VersionMatcher,
+}
 
-impl PartialEq<GameVersion> for FileGameVersion {
-    fn eq(&self, other: &GameVersion) -> bool {
-        other.eq(self)
+impl FileGameVersion {
+    pub fn from_string(mut str: String) -> Self {
+        if str.ends_with("-Snapshot") || str.ends_with("-snapshot") {
+            let mut v = str.into_bytes();
+            v.truncate(v.len()-9);
+            v.extend(b".99999999");
+            str = String::from_utf8(v).unwrap();
+        }
+
+        let vpart = match VersionPart::parse_str(&str) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Failed to parse file game version of addon: {e}");
+                VersionPart::empty()
+            },
+        };
+
+        // if vpart.points.is_empty() {
+        //     dbg!(&str);
+        //     error!("Configured game version must not be empty");
+        // }
+
+        Self {
+            str,
+            vpart
+        }
     }
 }
+
+impl GameVersion {
+    pub fn from_string(str: String) -> Self {
+        let matcher = match VersionMatcher::parse(&str) {
+            Ok(v) => v,
+            Err(e) => {
+                hard_error!("Filed to parse configured game version: {e}");
+            },
+        };
+
+        if matcher.is_empty_recursive() {
+            hard_error!("Configured game version must not be empty");
+        }
+
+        Self {
+            str,
+            matcher
+        }
+    }
+
+    pub fn parse_and_match_str(&self, mut str: &str) -> bool {
+        let mut str = str.to_owned();
+        if str.ends_with("-Snapshot") || str.ends_with("-snapshot") {
+            let mut v = str.into_bytes();
+            v.truncate(v.len()-9);
+            v.extend(b".99999999");
+            str = String::from_utf8(v).unwrap();
+        }
+
+        let vpart = match VersionPart::parse_str(&str) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Filed to parse configured game version: {e}");
+                return false;
+            },
+        };
+
+        // if vpart.points.is_empty() {
+        //     dbg!(&str);
+        //     error!("Configured game version must not be empty");
+        // }
+        
+        self.matcher.matches_version(&vpart)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for GameVersion {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>
+    {
+        let str = String::deserialize(deserializer)?;
+        
+        Ok(GameVersion::from_string(str))
+    }
+}
+
+impl serde::Serialize for GameVersion {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer
+    {
+        self.str.serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for FileGameVersion {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>
+    {
+        let str = String::deserialize(deserializer)?;
+        
+        Ok(Self::from_string(str))
+    }
+}
+
+impl serde::Serialize for FileGameVersion {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer
+    {
+        self.str.serialize(serializer)
+    }
+}
+
 impl PartialEq<FileGameVersion> for GameVersion {
     fn eq(&self, other: &FileGameVersion) -> bool {
-        let s = self.0.trim();
-        let other = other.0.trim();
-        let mut s = s.splitn(2,'x');
-
-        let start = s.next().expect("Invalid game version pattern");
-        let mut start_stripped = start;
-        if let Some(s) = start.strip_suffix('.') {
-            start_stripped = s;
-        }
-        let end = s.next();
-
-        if s.next().is_some() {
-            panic!("Invalid game version pattern");
-        }
-
-        if let Some(end) = end {
-            (other.starts_with(start) && other.ends_with(end)) || eq_str_concat(other, [start_stripped,end])
-        } else {
-            other == start
-        }
+        self.matcher.matches_version(&other.vpart)
     }
 }
 

@@ -127,7 +127,7 @@ impl AddonInfo {
     pub fn release_type(&self, game_version: &GameVersion) -> Option<ReleaseType> {
         let mut max_release_type = None;
         self.latest_files_indexes.iter()
-            .filter(|g| *game_version.0 == g.game_version )
+            .filter(|g| game_version.parse_and_match_str(&g.game_version) )
             .for_each(|g| {
                 let file_release_type = ReleaseType::from(g.release_type.clone());
                 if max_release_type.is_none() || file_release_type >= max_release_type.unwrap() {

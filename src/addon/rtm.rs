@@ -123,7 +123,7 @@ impl Conf {
         fn in_list(file: &AddonFile, entry: &str) -> bool {
             let entry = entry.trim().to_lowercase();
             for file_game_version in &file.game_version {
-                if file_game_version.0.trim().to_lowercase().contains(&entry) {
+                if file_game_version.str.trim().to_lowercase().contains(&entry) {
                     return true;
                 }
             }
